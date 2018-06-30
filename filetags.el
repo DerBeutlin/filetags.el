@@ -29,9 +29,13 @@
 (require 'subr-x)
 (require 'cl)
 (require 'ivy)
-(defvar filetags-delimiter " -- " "delimiter between filename and tags")
-(defvar filetags-controlled-vocabulary '()
-  "tags that can be added (besides tags which are already there)")
+(defgroup filetags nil "A helper for managing filetags directly in the filename"
+  :group 'applications)
+(defcustom filetags-delimiter " -- " "delimiter between filename and tags"
+  :group 'filetags)
+(defcustom filetags-controlled-vocabulary '()
+  "tags that can be added (besides tags which are already there)"
+  :group 'filetags)
 
 (defun filetags-extract-filetags (filename)
   "extract the tags from FILENAME remove duplicates and sort them"
@@ -71,6 +75,7 @@
               extension))))
 
 (defun filetags-add-tags-to-filename (fullname tags)
+  "takes TAGS and appends them uniquely and sorted to the FULLNAME and returns the new filename"
   (let* ((old_tags (filetags-extract-filetags (file-name-nondirectory fullname)))
          (all_tags (filetags-sort-and-uniq-tags (append tags old_tags)))
          (new_file_name (filetags-generate-new-filename (file-name-nondirectory fullname)
@@ -79,6 +84,7 @@
             new_file_name)))
 
 (defun filetags-remove-tags (fullname tags)
+  "takes TAGS and removes any occurence of these tags from the FULLNAME and returns the new filename"
   (let* ((old_tags (filetags-extract-filetags (file-name-nondirectory fullname)))
          (all_tags (filetags-sort-and-uniq-tags (cl-set-difference old_tags tags :test 'string=)))
          (new_file_name (filetags-generate-new-filename (file-name-nondirectory fullname)
@@ -86,33 +92,35 @@
     (concat (file-name-directory fullname)
             new_file_name)))
 
-(defun dired-add-tags (tagsstring)
-  (interactive "sEnter Tags space seperated: ")
-  (if (dired-get-marked-files)
-      (let ((filenames (dired-get-marked-files))
-            (tags (split-string tagsstring split-string-default-separators
-                                t split-string-default-separators)))
-        (dolist (filename filenames)
-          (filetags-add-tags-to-filename filename tags)))
-    (let ((fullname (dired-get-filename))
-          (tags (split-string tagsstring split-string-default-separators
-                              t split-string-default-separators)))
-      (filetags-add-tags-to-filename fullname tags))))
+;; (defun dired-add-tags (tagsstring)
+;;   (interactive "sEnter Tags space seperated: ")
+;;   (if (dired-get-marked-files)
+;;       (let ((filenames (dired-get-marked-files))
+;;             (tags (split-string tagsstring split-string-default-separators
+;;                                 t split-string-default-separators)))
+;;         (dolist (filename filenames)
+;;           (filetags-add-tags-to-filename filename tags)))
+;;     (let ((fullname (dired-get-filename))
+;;           (tags (split-string tagsstring split-string-default-separators
+;;                               t split-string-default-separators)))
+;;       (filetags-add-tags-to-filename fullname tags))))
 
-(defun dired-remove-tags (tagsstring)
-  (interactive "sEnter Tags space seperated: ")
-  (if (dired-get-marked-files)
-      (let ((filenames (dired-get-marked-files))
-            (tags (split-string tagsstring split-string-default-separators
-                                t split-string-default-separators)))
-        (dolist (filename filenames)
-          (filetags-remove-tags filename tags)))
-    (let ((fullname (dired-get-filename))
-          (tags (split-string tagsstring split-string-default-separators
-                              t split-string-default-separators)))
-      (filetags-remove-tags fullname tags))))
+;; (defun dired-remove-tags (tagsstring)
+;;   (interactive "sEnter Tags space seperated: ")
+;;   (if (dired-get-marked-files)
+;;       (let ((filenames (dired-get-marked-files))
+;;             (tags (split-string tagsstring split-string-default-separators
+;;                                 t split-string-default-separators)))
+;;         (dolist (filename filenames)
+;;           (filetags-remove-tags filename tags)))
+;;     (let ((fullname (dired-get-filename))
+;;           (tags (split-string tagsstring split-string-default-separators
+;;                               t split-string-default-separators)))
+;;       (filetags-remove-tags fullname tags))))
 
 (defun filetags-update-tags (fullname tags-with-prefix)
+  "takes TAGS-WITH—PREFIX and depending on the prefix(+/-) removes
+ or adds these tags from the FULLNAME and returns the new filename"
   (let ((tags-to-add (filetags-filter-add-tags tags-with-prefix))
         (tags-to-remove (filetags-filter-remove-tags tags-with-prefix))
         (new-filename))
@@ -120,6 +128,7 @@
     (filetags-remove-tags new-filename tags-to-remove)))
 
 (defun filetags-filter-add-tags (tags-with-prefix)
+  "filter out the tags out of TAGS-WITH—PREFIX that have the + prefix"
   (mapcar (lambda (str)
             (string-trim-left str "+"))
           (seq-filter (lambda (tag)
@@ -127,6 +136,7 @@
                       tags-with-prefix)))
 
 (defun filetags-filter-remove-tags (tags-with-prefix)
+  "filter out the tags out of TAGS-WITH—PREFIX that have the - prefix"
   (mapcar (lambda (str)
             (string-trim-left str "-"))
           (seq-filter (lambda (tag)
@@ -134,6 +144,7 @@
                       tags-with-prefix)))
 
 (defun filetags-union (l)
+  "returns the sorted and unique union of a list of list of strings"
   (filetags-sort-and-uniq-tags (cond
                                 ((null l) nil)
                                 ((null (cdr l))
@@ -142,24 +153,27 @@
                                            (filetags-union (cdr l)))))))
 ;; taken from https://stackoverflow.com/a/31422481
 (defun filetags-intersection (l &rest cl-keys)
-  (cond
-   ((null l) nil)
-   ((null (cdr l))
-    (car l))
-   (t (apply 'cl-intersection
-             (car l)
-             (apply 'filetags-intersection
-                    (cdr l)
-                    cl-keys)
-             cl-keys))))
+  "returns the sorted and unique intersection of a list of list of strings"
+  (filetags-sort-and-uniq-tags(cond
+                               ((null l) nil)
+                               ((null (cdr l))
+                                (car l))
+                               (t (apply 'cl-intersection
+                                         (car l)
+                                         (apply 'filetags-intersection
+                                                (cdr l)
+                                                cl-keys)
+                                         cl-keys))))
 
 
 
 
-(defun filetags-accumulate-remove-tags-candidates (filenames)
-  (filetags-union (mapcar 'filetags-extract-filetags filenames)))
+  (defun filetags-accumulate-remove-tags-candidates (filenames)
+    "takes a list of FILENAMES and accumulate all tags as candidates for potential removal"
+    (filetags-union (mapcar 'filetags-extract-filetags filenames))))
 
 (defun filetags-accumulate-add-tags-candidates (filenames)
+  "takes a list of FILENAMES and accumulates all tags which are not in every filename for potential adding"
   (let ((remove-tags (filetags-accumulate-remove-tags-candidates
                       filenames))
         (tags-in-every-file (filetags-intersection (mapcar 'filetags-extract-filetags filenames)
@@ -169,6 +183,7 @@
 
 
 (defun filetags-prepend (prefix tags)
+  "takes PREFIX and add it to every tag in TAGS"
   (mapcar (lambda (str)
             (concat prefix str))
           tags))
@@ -179,21 +194,10 @@
                            (push "ENDPROMPT" tags))))
     (when (not (string= new-tag "ENDPROMPT"))
       new-tag)))
-(defun filetags-collect-tags-ivy ()
-  (interactive)
-  (let ((tags)
-        (prompt-finished))
-    (progn
-      (while (not prompt-finished)
-        (let ((new_tag (ivy-read "Add Tags : "
-                                 '("ENDPROMPT" "foo" "bar" "baz"))))
-          (if (string= new_tag "ENDPROMPT")
-              (setq prompt-finished t)
-            (push new_tag tags)))))))
+
+
+
 
 (provide 'filetags)
 ;;; filetags.el ends here
 
-;; (message (filetags-ivy-get-tag '("test")))
-
-;; (filetags-intersection '(("test1" "test2") ("test2") ("test2" "test3")) :test 'string=)
