@@ -24,7 +24,7 @@
 ;;
 
 
-;;; Code:
+;;; Code: 
 (require 'seq)
 (require 'subr-x)
 (require 'cl)
@@ -33,7 +33,7 @@
   :group 'applications)
 (defcustom filetags-delimiter " -- " "delimiter between filename and tags"
   :group 'filetags)
-(defcustom filetags-controlled-vocabulary '()
+(defcustom filetags-controlled-vocabulary '("test")
   "tags that can be added (besides tags which are already there)"
   :group 'filetags)
 
@@ -127,6 +127,13 @@
     (setq new-filename (filetags-add-tags-to-filename fullname tags-to-add))
     (filetags-remove-tags new-filename tags-to-remove)))
 
+(defun filetags-update-tags-write (fullname tags-with-prefix)
+  "takes TAGS-WITH—PREFIX and depending on the prefix(+/-) removes
+ or adds these tags from the FULLNAME and renames the file"
+  (let ((new-filename (filetags-update-tags fullname tags-with-prefix)))
+    (if (not (string= fullname new-filename))
+        (dired-rename-file fullname new-filename nil))))
+
 (defun filetags-filter-add-tags (tags-with-prefix)
   "filter out the tags out of TAGS-WITH—PREFIX that have the + prefix"
   (mapcar (lambda (str)
@@ -154,23 +161,23 @@
 ;; taken from https://stackoverflow.com/a/31422481
 (defun filetags-intersection (l &rest cl-keys)
   "returns the sorted and unique intersection of a list of list of strings"
-  (filetags-sort-and-uniq-tags(cond
-                               ((null l) nil)
-                               ((null (cdr l))
-                                (car l))
-                               (t (apply 'cl-intersection
-                                         (car l)
-                                         (apply 'filetags-intersection
-                                                (cdr l)
-                                                cl-keys)
-                                         cl-keys))))
+  (filetags-sort-and-uniq-tags (cond
+                                ((null l) nil)
+                                ((null (cdr l))
+                                 (car l))
+                                (t (apply 'cl-intersection
+                                          (car l)
+                                          (apply 'filetags-intersection
+                                                 (cdr l)
+                                                 cl-keys)
+                                          cl-keys)))))
 
 
 
 
-  (defun filetags-accumulate-remove-tags-candidates (filenames)
-    "takes a list of FILENAMES and accumulate all tags as candidates for potential removal"
-    (filetags-union (mapcar 'filetags-extract-filetags filenames))))
+(defun filetags-accumulate-remove-tags-candidates (filenames)
+  "takes a list of FILENAMES and accumulate all tags as candidates for potential removal"
+  (filetags-union (mapcar 'filetags-extract-filetags filenames)))
 
 (defun filetags-accumulate-add-tags-candidates (filenames)
   "takes a list of FILENAMES and accumulates all tags which are not in every filename for potential adding"
@@ -178,26 +185,54 @@
                       filenames))
         (tags-in-every-file (filetags-intersection (mapcar 'filetags-extract-filetags filenames)
                                                    :test 'string=)))
-    (set-difference remove-tags tags-in-every-file
-                    :test 'string=)))
+    (filetags-sort-and-uniq-tags (union (set-difference remove-tags tags-in-every-file
+                                                        :test 'string=)
+                                        filetags-controlled-vocabulary))))
 
+(defun filetags-prepend (prefix tag)
+  "takes PREFIX and prepend it to TAG"
+  (concat prefix tag))
 
-(defun filetags-prepend (prefix tags)
-  "takes PREFIX and add it to every tag in TAGS"
-  (mapcar (lambda (str)
-            (concat prefix str))
-          tags))
+(defun filetags-prepend-list (prefix tags)
+  "takes PREFIX and prepend it to every tag in TAGS"
+  (mapcar (lambda (str) (filetags-prepend prefix str)) tags))
 
-(defun filetags-ivy-get-tag (tags)
+(defun filetags-ivy-get-tag (tags selected-tags)
   "uses ivy to ask for a tag out of TAGS if ENDPROMT is chosen return nil otherwise return tag"
-  (let ((new-tag (ivy-read "Add Tags: "
+  (let ((new-tag (ivy-read (concat "Add Tags ( "
+                                   (mapconcat 'identity selected-tags " ")
+                                   " ): ")
                            (push "ENDPROMPT" tags))))
     (when (not (string= new-tag "ENDPROMPT"))
       new-tag)))
 
-
-
-
+(defun filetags-dired-update-tags-of-marked-files ()
+  (interactive)
+  (let* ((tags-with-prefix)
+         (entered-tag t)
+         (filenames (dired-get-marked-files))
+         (add-candidates (filetags-accumulate-add-tags-candidates filenames))
+         (remove-candidates (filetags-accumulate-remove-tags-candidates
+                             filenames)))
+    (while entered-tag
+      (progn
+        (setq entered-tag (filetags-ivy-get-tag (append (filetags-prepend-list "+" add-candidates)
+                                                        (filetags-prepend-list "-" remove-candidates))
+                                                tags-with-prefix))
+        (if entered-tag
+            (let* ((bare-entered-tag (string-trim-left entered-tag "+\\|-"))
+                   (prefix-entered-tag (substring entered-tag 0 1))
+                   (inverse-entered-tag (if (string= prefix-entered-tag "+")
+                                            (filetags-prepend "-" bare-entered-tag)
+                                          (filetags-prepend "+" bare-entered-tag))))
+              (if (member inverse-entered-tag tags-with-prefix)
+                  (setq tags-with-prefix (delete inverse-entered-tag tags-with-prefix))
+                (when (not(member entered-tag tags-with-prefix))
+                  (push entered-tag tags-with-prefix)))
+              )
+          (dolist (filename filenames) (filetags-update-tags-write filename tags-with-prefix))
+          )
+        ))))
 (provide 'filetags)
 ;;; filetags.el ends here
 
