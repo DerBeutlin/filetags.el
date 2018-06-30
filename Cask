@@ -3,6 +3,8 @@
 
 (package-file "filetags.el")
 
+(depends-on "ivy")
+
 (development
  (depends-on "f")
  (depends-on "ecukes")
