@@ -41,8 +41,8 @@
   "extract the tags from FILENAME remove duplicates and sort them"
   (if (string-match-p (regexp-quote filetags-delimiter)
                       (file-name-sans-extension filename))
-      (filetags-sort-and-uniq-tags (split-string (car (reverse (split-string (file-name-sans-extension filename)
-                                                                             filetags-delimiter)))
+      (filetags-sort-and-uniq-tags (split-string (car (last (split-string (file-name-sans-extension filename)
+                                                                          filetags-delimiter)))
                                                  split-string-default-separators
                                                  t
                                                  split-string-default-separators))
@@ -195,7 +195,9 @@
 
 (defun filetags-prepend-list (prefix tags)
   "takes PREFIX and prepend it to every tag in TAGS"
-  (mapcar (lambda (str) (filetags-prepend prefix str)) tags))
+  (mapcar (lambda (str)
+            (filetags-prepend prefix str))
+          tags))
 
 (defun filetags-ivy-get-tag (tags selected-tags)
   "uses ivy to ask for a tag out of TAGS if ENDPROMT is chosen return nil otherwise return tag"
@@ -220,19 +222,26 @@
                                                         (filetags-prepend-list "-" remove-candidates))
                                                 tags-with-prefix))
         (if entered-tag
-            (let* ((bare-entered-tag (string-trim-left entered-tag "+\\|-"))
-                   (prefix-entered-tag (substring entered-tag 0 1))
-                   (inverse-entered-tag (if (string= prefix-entered-tag "+")
-                                            (filetags-prepend "-" bare-entered-tag)
-                                          (filetags-prepend "+" bare-entered-tag))))
-              (if (member inverse-entered-tag tags-with-prefix)
-                  (setq tags-with-prefix (delete inverse-entered-tag tags-with-prefix))
-                (when (not(member entered-tag tags-with-prefix))
-                  (push entered-tag tags-with-prefix)))
-              )
-          (dolist (filename filenames) (filetags-update-tags-write filename tags-with-prefix))
-          )
-        ))))
+            (setq tags-with-prefix (filetags-update-tags-with-prefix entered-tag
+                                                                     tags-with-prefix))
+          (dolist (filename filenames)
+            (filetags-update-tags-write filename tags-with-prefix)))))))
+
+
+(defun filetags-update-tags-with-prefix (entered-tag tags-with-prefix)
+  (let* ((inverse-entered-tag (filetags-inverse-tag entered-tag)))
+    (if (member inverse-entered-tag tags-with-prefix)
+        (setq tags-with-prefix (delete inverse-entered-tag tags-with-prefix))
+      (when (not (member entered-tag tags-with-prefix))
+        (push entered-tag tags-with-prefix)))))
+
+
+(defun filetags-inverse-tag (tag)
+  (let ((bare-tag (string-trim-left tag "+\\|-"))
+        (prefix-tag (substring tag 0 1)))
+    (if (string= prefix-tag "+")
+        (filetags-prepend "-" bare-tag)
+      (filetags-prepend "+" bare-tag))))
 (provide 'filetags)
 ;;; filetags.el ends here
 

@@ -71,8 +71,8 @@
   (let ((filenames '("/home/max/test -- test3.txt" "/home/max/test -- test2 test1.txt"
                      "/home/max/test -- test2.txt"))
         (expected-remove-candidates '("test1" "test2" "test3")))
-    (should (equal expected-remove-candidates (filetags-accumulate-remove-tags-candidates
-                                               filenames)))))
+    (should (equal (filetags-accumulate-remove-tags-candidates
+                    filenames) expected-remove-candidates))))
 
 (ert-deftest filetags-accumulate-add-tags-candidates-are-sorted-union-of-tags-minus-tags-which-are-in-every-file-test
     ()
@@ -80,30 +80,45 @@
   (let ((filenames '("/home/max/test -- test2 test3.txt" "/home/max/test -- test2 test1.txt"
                      "/home/max/test -- test2.txt"))
         (expected-add-candidates '("test1" "test3")))
-    (should (equal expected-add-candidates (filetags-accumulate-add-tags-candidates filenames)))))
+    (should (equal (filetags-accumulate-add-tags-candidates filenames) expected-add-candidates))))
 
-(ert-deftest filetags-accumulate-add-tags-candidates-includes-filetags-controlled-vocabulary ()
+(ert-deftest filetags-accumulate-add-tags-candidates-includes-filetags-controlled-vocabulary
+    ()
   (setq filetags-controlled-vocabulary '("controlled" "test2"))
   (let ((filenames '("/home/max/test -- test1.txt" "/home/max/test -- atest test1 test2.txt"))
-        (expected-add-candidates '("atest" "controlled" "test2") ))
-    (should (equal expected-add-candidates (filetags-accumulate-add-tags-candidates filenames)))
-    )
-  )
-
+        (expected-add-candidates '("atest" "controlled" "test2")))
+    (should (equal (filetags-accumulate-add-tags-candidates filenames) expected-add-candidates))))
 
 (ert-deftest filetags-prepend-add-to-tag-test
     ()
   (let ((tags '("test1" "test2" "test3"))
         (expected-tags '("+test1" "+test2" "+test3")))
-    (should (equal expected-tags (filetags-prepend-list "+" tags)))))
+    (should (equal (filetags-prepend-list "+" tags) expected-tags))))
 (ert-deftest filetags-prepend-remove-to-tag-test
     ()
   (let ((tags '("test1" "test2" "test3"))
         (expected-tags '("-test1" "-test2" "-test3")))
-    (should (equal expected-tags (filetags-prepend-list "-" tags)))))
+    (should (equal (filetags-prepend-list "-" tags) expected-tags))))
 
+(ert-deftest filetags-update-tags-with-prefix-adds-tag-test
+    ()
+  (let ((tags-with-prefix '())
+        (entered-tag "+test"))
+    (should (equal (filetags-update-tags-with-prefix entered-tag
+                                                     tags-with-prefix) '("+test")))))
 
+(ert-deftest filetags-update-tags-with-prefix-removes-inverse-tag-test
+    ()
+  (let ((tags-with-prefix '("-test"))
+        (entered-tag "+test"))
+    (should (equal (filetags-update-tags-with-prefix entered-tag
+                                                     tags-with-prefix) '()))))
 
+(ert-deftest filetag-inverse-tag-inverses-tag
+    ()
+  (let ((tag "+test"))
+    (should (equal (filetags-inverse-tag tag) "-test"))
+    (should (equal (filetags-inverse-tag (filetags-inverse-tag tag)) tag))))
 
 
 
