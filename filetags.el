@@ -33,11 +33,11 @@
   :group 'applications)
 (defcustom filetags-delimiter " -- " "delimiter between filename and tags"
   :group 'filetags)
-(defcustom filetags-controlled-vocabulary '("test")
+(defcustom filetags-controlled-vocabulary '()
   "tags that are proposed (besides tags which are already in the filenames) if filetags-enforce-controlled-vocabulary is t then no other tags can be added"
   :group 'filetags)
 (defcustom filetags-enforce-controlled-vocabulary
-  t "if t then only tags from filetags-controlled-vocabulary and tags already present in the filenames can be used"
+  nil "if t then only tags from filetags-controlled-vocabulary and tags already present in the filenames can be used"
   :group 'filetags)
 
 (defun filetags-extract-filetags (filename)
