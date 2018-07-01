@@ -34,8 +34,9 @@
 (defcustom filetags-delimiter " -- " "delimiter between filename and tags"
   :group 'filetags)
 (defcustom filetags-controlled-vocabulary '("test")
-  "tags that can be added (besides tags which are already there)"
+  "tags that are proposed (besides tags which are already in the filenames) if filetags-enforce-controlled-vocabulary is t then no other tags can be added"
   :group 'filetags)
+(defcustom filetags-enforce-controlled-vocabulary t "if t then only tags from filetags-controlled-vocabulary and tags already present in the filenames can be used" :group 'filetags)
 
 (defun filetags-extract-filetags (filename)
   "extract the tags from FILENAME remove duplicates and sort them"
@@ -201,11 +202,11 @@
 
 (defun filetags-ivy-get-tag (tags selected-tags)
   "uses ivy to ask for a tag out of TAGS if ENDPROMT is chosen return nil otherwise return tag"
-  (let ((new-tag (ivy-read (concat "Add Tags ( "
+  (let ((new-tag (ivy-read (concat "Add(+)/Remove(-) Tags ( "
                                    (mapconcat 'identity selected-tags " ")
                                    " ): ")
-                           (push "ENDPROMPT" tags))))
-    (when (not (string= new-tag "ENDPROMPT"))
+                           (push "Perform Actions" tags) :require-match filetags-enforce-controlled-vocabulary)))
+    (when (not (string= new-tag "Perform Actions"))
       new-tag)))
 
 (defun filetags-dired-update-tags()
@@ -222,8 +223,10 @@
                                                                                tags-with-prefix)
                                                 tags-with-prefix))
         (if entered-tag
-            (setq tags-with-prefix (filetags-update-tags-with-prefix entered-tag
-                                                                     tags-with-prefix))
+            (if (or (s-starts-with-p "+" entered-tag) (s-starts-with-p "-" entered-tag)) 
+                (setq tags-with-prefix (filetags-update-tags-with-prefix entered-tag
+                                                                         tags-with-prefix))
+                (message "Tag Action has to start with + or -"))
           (dolist (filename filenames)
             (filetags-update-tags-write filename tags-with-prefix)))))))
 
@@ -255,3 +258,4 @@
 (provide 'filetags)
 ;;; filetags.el ends here
 
+(s-starts-with-p "+" "+test")
