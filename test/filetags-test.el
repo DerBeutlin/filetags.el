@@ -89,6 +89,15 @@
         (expected-add-candidates '("atest" "controlled" "test2")))
     (should (equal (filetags-accumulate-add-tags-candidates filenames) expected-add-candidates))))
 
+(ert-deftest filetags-accumulate-add-tags-candidates-does-not-include-controlled-vocabulary-tags-which-are-in-every-file-test
+    ()
+  (setq filetags-controlled-vocabulary '("controlled"))
+  (let ((filenames '("/home/max/test -- controlled.txt" "/home/max/test -- controlled.txt"))
+        (expected-add-candidates '()))
+    (should (equal (filetags-accumulate-add-tags-candidates filenames) expected-add-candidates))))
+
+
+
 (ert-deftest filetags-prepend-add-to-tag-test
     ()
   (let ((tags '("test1" "test2" "test3"))
@@ -114,14 +123,35 @@
     (should (equal (filetags-update-tags-with-prefix entered-tag
                                                      tags-with-prefix) '()))))
 
-(ert-deftest filetag-inverse-tag-inverses-tag
+(ert-deftest filetags-inverse-tag-inverses-tag-test
     ()
   (let ((tag "+test"))
     (should (equal (filetags-inverse-tag tag) "-test"))
     (should (equal (filetags-inverse-tag (filetags-inverse-tag tag)) tag))))
 
+(ert-deftest filetags-construct-candidates-adds-add-candidates-remove-candidates-and-inverse-tags-with-prefix-test
+    ()
+  (let ((add-candidates '("+test"))
+        (remove-candidates '("-test2"))
+        (tags-with-prefix '("+test3")))
+    (should (equal (filetags-construct-candidates add-candidates
+                                                  remove-candidates tags-with-prefix) '("+test" "-test2" "-test3")))))
 
+(ert-deftest filetags-construct-candidates-removes-duplicates-and-sort-test
+    ()
+  (let ((add-candidates '("+test"))
+        (remove-candidates '("-test3"))
+        (tags-with-prefix '("+test3" "-test4")))
+    (should (equal (filetags-construct-candidates add-candidates
+                                                  remove-candidates tags-with-prefix) '("+test" "+test4" "-test3")))))
 
+(ert-deftest filetags-construct-candidates-remove-tags-already-chosen-test ()
+  (let ((add-candidates '("+test"))
+        (remove-candidates '("-test2"))
+        (tags-with-prefix '("+test" "-test2")))
+    (should (equal (filetags-construct-candidates add-candidates
+                                                  remove-candidates tags-with-prefix) '("+test2" "-test" ))))
+  )
 
 
 

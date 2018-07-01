@@ -187,7 +187,7 @@
                                                    :test 'string=)))
     (filetags-sort-and-uniq-tags (union (set-difference remove-tags tags-in-every-file
                                                         :test 'string=)
-                                        filetags-controlled-vocabulary))))
+                                        (set-difference filetags-controlled-vocabulary tags-in-every-file :test 'string=)))))
 
 (defun filetags-prepend (prefix tag)
   "takes PREFIX and prepend it to TAG"
@@ -208,18 +208,18 @@
     (when (not (string= new-tag "ENDPROMPT"))
       new-tag)))
 
-(defun filetags-dired-update-tags-of-marked-files ()
+(defun filetags-dired-update-tags()
   (interactive)
   (let* ((tags-with-prefix)
          (entered-tag t)
-         (filenames (dired-get-marked-files))
-         (add-candidates (filetags-accumulate-add-tags-candidates filenames))
-         (remove-candidates (filetags-accumulate-remove-tags-candidates
-                             filenames)))
+         (filenames (if (dired-get-marked-files) (dired-get-marked-files) '((dired-get-filename))))
+         (add-candidates (filetags-prepend-list "+" (filetags-accumulate-add-tags-candidates filenames)))
+         (remove-candidates (filetags-prepend-list "-" (filetags-accumulate-remove-tags-candidates
+                                                        filenames))))
     (while entered-tag
       (progn
-        (setq entered-tag (filetags-ivy-get-tag (append (filetags-prepend-list "+" add-candidates)
-                                                        (filetags-prepend-list "-" remove-candidates))
+        (setq entered-tag (filetags-ivy-get-tag (filetags-construct-candidates add-candidates remove-candidates
+                                                                               tags-with-prefix)
                                                 tags-with-prefix))
         (if entered-tag
             (setq tags-with-prefix (filetags-update-tags-with-prefix entered-tag
@@ -242,6 +242,16 @@
     (if (string= prefix-tag "+")
         (filetags-prepend "-" bare-tag)
       (filetags-prepend "+" bare-tag))))
+
+
+(defun filetags-construct-candidates (add-candidates remove-candidates tags-with-prefix)
+  (let ((inverse-tags (mapcar 'filetags-inverse-tag tags-with-prefix))
+        (unused-add-candidates (set-difference add-candidates tags-with-prefix
+                                               :test 'string=))
+        (unused-remove-candidates (set-difference remove-candidates tags-with-prefix
+                                                  :test 'string=)))
+    (filetags-sort-and-uniq-tags (append (append unused-add-candidates unused-remove-candidates)
+                                         inverse-tags))))
 (provide 'filetags)
 ;;; filetags.el ends here
 
