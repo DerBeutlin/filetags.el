@@ -145,13 +145,13 @@
     (should (equal (filetags-construct-candidates add-candidates
                                                   remove-candidates tags-with-prefix) '("+test" "+test4" "-test3")))))
 
-(ert-deftest filetags-construct-candidates-remove-tags-already-chosen-test ()
+(ert-deftest filetags-construct-candidates-remove-tags-already-chosen-test
+    ()
   (let ((add-candidates '("+test"))
         (remove-candidates '("-test2"))
         (tags-with-prefix '("+test" "-test2")))
     (should (equal (filetags-construct-candidates add-candidates
-                                                  remove-candidates tags-with-prefix) '("+test2" "-test" ))))
-  )
+                                                  remove-candidates tags-with-prefix) '("+test2" "-test")))))
 
 
 

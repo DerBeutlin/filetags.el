@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2018  Max Beutelspacher
 
-;; Author: Max Beutelspacher <max@MACS>
+;; Author: Max Beutelspacher 
 ;; Keywords: convenience, files
 ;; Version: 0.0.1
 
@@ -36,7 +36,9 @@
 (defcustom filetags-controlled-vocabulary '("test")
   "tags that are proposed (besides tags which are already in the filenames) if filetags-enforce-controlled-vocabulary is t then no other tags can be added"
   :group 'filetags)
-(defcustom filetags-enforce-controlled-vocabulary t "if t then only tags from filetags-controlled-vocabulary and tags already present in the filenames can be used" :group 'filetags)
+(defcustom filetags-enforce-controlled-vocabulary
+  t "if t then only tags from filetags-controlled-vocabulary and tags already present in the filenames can be used"
+  :group 'filetags)
 
 (defun filetags-extract-filetags (filename)
   "extract the tags from FILENAME remove duplicates and sort them"
@@ -92,32 +94,6 @@
                                                         all_tags)))
     (concat (file-name-directory fullname)
             new_file_name)))
-
-;; (defun dired-add-tags (tagsstring)
-;;   (interactive "sEnter Tags space seperated: ")
-;;   (if (dired-get-marked-files)
-;;       (let ((filenames (dired-get-marked-files))
-;;             (tags (split-string tagsstring split-string-default-separators
-;;                                 t split-string-default-separators)))
-;;         (dolist (filename filenames)
-;;           (filetags-add-tags-to-filename filename tags)))
-;;     (let ((fullname (dired-get-filename))
-;;           (tags (split-string tagsstring split-string-default-separators
-;;                               t split-string-default-separators)))
-;;       (filetags-add-tags-to-filename fullname tags))))
-
-;; (defun dired-remove-tags (tagsstring)
-;;   (interactive "sEnter Tags space seperated: ")
-;;   (if (dired-get-marked-files)
-;;       (let ((filenames (dired-get-marked-files))
-;;             (tags (split-string tagsstring split-string-default-separators
-;;                                 t split-string-default-separators)))
-;;         (dolist (filename filenames)
-;;           (filetags-remove-tags filename tags)))
-;;     (let ((fullname (dired-get-filename))
-;;           (tags (split-string tagsstring split-string-default-separators
-;;                               t split-string-default-separators)))
-;;       (filetags-remove-tags fullname tags))))
 
 (defun filetags-update-tags (fullname tags-with-prefix)
   "takes TAGS-WITH—PREFIX and depending on the prefix(+/-) removes
@@ -188,7 +164,8 @@
                                                    :test 'string=)))
     (filetags-sort-and-uniq-tags (union (set-difference remove-tags tags-in-every-file
                                                         :test 'string=)
-                                        (set-difference filetags-controlled-vocabulary tags-in-every-file :test 'string=)))))
+                                        (set-difference filetags-controlled-vocabulary
+                                                        tags-in-every-file :test 'string=)))))
 
 (defun filetags-prepend (prefix tag)
   "takes PREFIX and prepend it to TAG"
@@ -205,33 +182,41 @@
   (let ((new-tag (ivy-read (concat "Add(+)/Remove(-) Tags ( "
                                    (mapconcat 'identity selected-tags " ")
                                    " ): ")
-                           (push "Perform Actions" tags) :require-match filetags-enforce-controlled-vocabulary)))
+                           (push "Perform Actions" tags)
+                           :require-match filetags-enforce-controlled-vocabulary)))
     (when (not (string= new-tag "Perform Actions"))
       new-tag)))
 
-(defun filetags-dired-update-tags()
+(defun filetags-dired-update-tags ()
+  "prompts the users for tag-actions (add tag with prefix +, remove tag with prefix -) applied on marked files in dired if they exist or the file on point otherwise"
   (interactive)
   (let* ((tags-with-prefix)
          (entered-tag t)
-         (filenames (if (dired-get-marked-files) (dired-get-marked-files) '((dired-get-filename))))
-         (add-candidates (filetags-prepend-list "+" (filetags-accumulate-add-tags-candidates filenames)))
-         (remove-candidates (filetags-prepend-list "-" (filetags-accumulate-remove-tags-candidates
-                                                        filenames))))
+         (filenames (if (dired-get-marked-files)
+                        (dired-get-marked-files)
+                      '((dired-get-filename))))
+         (add-candidates (filetags-prepend-list "+"
+                                                (filetags-accumulate-add-tags-candidates filenames)))
+         (remove-candidates (filetags-prepend-list "-"
+                                                   (filetags-accumulate-remove-tags-candidates
+                                                    filenames))))
     (while entered-tag
       (progn
-        (setq entered-tag (filetags-ivy-get-tag (filetags-construct-candidates add-candidates remove-candidates
-                                                                               tags-with-prefix)
+        (setq entered-tag (filetags-ivy-get-tag (filetags-construct-candidates add-candidates
+                                                                               remove-candidates tags-with-prefix)
                                                 tags-with-prefix))
         (if entered-tag
-            (if (or (s-starts-with-p "+" entered-tag) (s-starts-with-p "-" entered-tag)) 
+            (if (or (s-starts-with-p "+" entered-tag)
+                    (s-starts-with-p "-" entered-tag))
                 (setq tags-with-prefix (filetags-update-tags-with-prefix entered-tag
                                                                          tags-with-prefix))
-                (message "Tag Action has to start with + or -"))
+              (message "Tag Action has to start with + or -"))
           (dolist (filename filenames)
             (filetags-update-tags-write filename tags-with-prefix)))))))
 
 
 (defun filetags-update-tags-with-prefix (entered-tag tags-with-prefix)
+  "add the ENTERED-TAG to TAGS—WITH—PREFIX if not already present. If the inverse tag action is already present remove the inverse tag action"
   (let* ((inverse-entered-tag (filetags-inverse-tag entered-tag)))
     (if (member inverse-entered-tag tags-with-prefix)
         (setq tags-with-prefix (delete inverse-entered-tag tags-with-prefix))
@@ -240,6 +225,7 @@
 
 
 (defun filetags-inverse-tag (tag)
+  "if TAG is prefixed with + return the tag prefixed with - and vis versa"
   (let ((bare-tag (string-trim-left tag "+\\|-"))
         (prefix-tag (substring tag 0 1)))
     (if (string= prefix-tag "+")
@@ -248,6 +234,7 @@
 
 
 (defun filetags-construct-candidates (add-candidates remove-candidates tags-with-prefix)
+  "construct candidates for prompt which are in ADD-CANDIDATES and REMOVE-CANDIDATES but which are not already in TAGS-WITH-PREFIX and add the inverses of TAGS-WITH—PREFIX"
   (let ((inverse-tags (mapcar 'filetags-inverse-tag tags-with-prefix))
         (unused-add-candidates (set-difference add-candidates tags-with-prefix
                                                :test 'string=))
@@ -258,4 +245,3 @@
 (provide 'filetags)
 ;;; filetags.el ends here
 
-(s-starts-with-p "+" "+test")
