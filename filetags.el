@@ -29,6 +29,7 @@
 (require 'subr-x)
 (require 'cl)
 (require 'ivy)
+(require 'org)
 (defgroup filetags nil "A helper for managing filetags directly in the filename"
   :group 'applications)
 (defcustom filetags-delimiter " -- " "delimiter between filename and tags"
@@ -108,7 +109,7 @@
   "takes TAGS-WITH—PREFIX and depending on the prefix(+/-) removes
  or adds these tags from the FULLNAME and renames the file"
   (let ((new-filename (filetags-update-tags fullname tags-with-prefix)))
-    (if (not (string= fullname new-filename))
+    (when (not (string= fullname new-filename))
         (dired-rename-file fullname new-filename nil))))
 
 (defun filetags-filter-add-tags (tags-with-prefix)
@@ -242,6 +243,50 @@
                                                   :test 'string=)))
     (filetags-sort-and-uniq-tags (append (append unused-add-candidates unused-remove-candidates)
                                          inverse-tags))))
+
+(defun string-starts-with-p (string prefix)
+  "Return t if STRING starts with PREFIX."
+  (and
+   (string-match (rx-to-string `(: bos ,prefix) t)
+                 string)
+   t))
+
+(defun filetags-remove-date (path)
+  (let ((directory (file-name-directory path))
+        (file-name file-name-nondirectory path))
+    (if (string-starts-with-p "" "test")) 
+    )
+  )
+
+(defun filetags-prepend-date (path time &optional withtime)
+  (let ((directory (file-name-directory path))
+        (filename (file-name-nondirectory path))
+        (datestring (if withtime (format-time-string "%Y-%m-%dT%H.%M.%S_" time)(format-time-string "%Y-%m-%d_" time))))
+    (concat directory datestring filename)))
+
+
+(defun filetags-prepend-date-write (path time &optional withtime)
+  (let ((new-path (filetags-prepend-date path time withtime)))
+    (when (not (string= path new-path))
+      (dired-rename-file path new-path nil))
+    )
+  )
+
+
+(defun filetags-dired-add-date-to-name(arg)
+  (interactive "P")
+  (let((filenames (if (dired-get-marked-files)
+                      (dired-get-marked-files)
+                    '((dired-get-filename))))
+       )
+    (dolist (filename filenames)
+      (filetags-prepend-date-write filename (file-attribute-modification-time (file-attributes filename))))
+    )
+  )
+
+
+
 (provide 'filetags)
 ;;; filetags.el ends here
 
+(format-time-string "%Y-%m-%d" (file-attribute-modification-time (file-attributes "~/Desktop/plain.txt")))

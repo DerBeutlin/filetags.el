@@ -153,6 +153,30 @@
     (should (equal (filetags-construct-candidates add-candidates
                                                   remove-candidates tags-with-prefix) '("+test2" "-test")))))
 
+(ert-deftest filetags-prepend-date-prepends-date-test ()
+  (let ((time (org-read-date nil t "<2018-07-03>"))
+        (filename "/home/max/test.txt"))
+    (should (equal (filetags-prepend-date filename time) "/home/max/2018-07-03_test.txt"))))
+
+
+(ert-deftest filetags-prepend-date-prepends-datetime-test ()
+  (let ((time (org-read-date nil t "<2018-07-03 02:00:00>"))
+        (filename "/home/max/test.txt"))
+    (should (equal (filetags-prepend-date filename time t) "/home/max/2018-07-03T02.00.00_test.txt"))))
+
+;; (ert-deftest filetags-prepend-date-should-replace-date-if-already-existing-test()
+;;   (let ((time (org-read-date nil t "<2018-07-03>"))
+;;         (filename "/home/max/2017-07-02_test.txt"))
+;;     (should (equal (filetags-prepend-date filename time) "/home/max/2018-07-03_test.txt"))
+;;     )
+;;   )
+
+(ert-deftest filetags-remove-date-can-remove-date-test ()
+  (let ((old-path "/home/max/2018-06-01_test.txt"))
+    (should (equal (filetags-remove-date old-path) "/home/max/test.txt"))
+    )
+  )
+
 
 
 ;;; filetags-test.el ends here
