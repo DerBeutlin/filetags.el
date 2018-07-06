@@ -365,8 +365,8 @@ filetags-controlled-vocabulary and returns the list to remove them"
         (mapcar 'filetags-parse-vocabulary-line
                 (split-string (buffer-string)
                               "\n"
-                              t))))
-  '(()))
+                              t)))
+    '(())))
 
 (defun filetags-parse-vocabulary-line (line)
   "parses one line of a .filetags file"
@@ -393,3 +393,4 @@ filetags-controlled-vocabulary and returns the list to remove them"
 
 (provide 'filetags)
 ;;; filetags.el ends here
+
