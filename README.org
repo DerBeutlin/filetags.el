@@ -34,5 +34,5 @@ In dired call =filetags-dired-add-date-to-name= to add the modification date of 
 The same is true for =filetags-dired-add-datetime-to-name= only that it also adds the time.
 The format is again the same as in [[https://github.com/novoid/date2name][date2name]] of novoid. 
 : 2018-07-06_test.txt
-: 2018-07-06T13:53:09_test.txt
+: 2018-07-06T13.53.09_test.txt
 Unfortunately right now this format should not be changed as it must match a corresponding regexp to remove potential timestamps already in the filename. 
