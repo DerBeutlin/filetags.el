@@ -1,5 +1,5 @@
 * Filetags
-Filetags is an Emacs package inspired by [[https://github.com/novoid/filetags][filetags]] which manages filetags directly in the filename. By default tags are space seperated words seperated from the rest of the filename by " -- " e.g.
+Filetags is an Emacs package inspired by [[https://github.com/novoid/filetags][filetags]] which manages filetags directly in the filename. By default tags are space seperated words seperated from the rest of the filename by  =--=  e.g.
 : image -- holiday italy.png
 This package provides a simple function to update these tags from the dired file browser and the option to restrict tags to a controlled vocabulary.
 
@@ -19,9 +19,9 @@ If one adds
 #+END_SRC
 to one's =.emacs= file, then only tags from the controlled vocabulary can be added to the files (plus tags which are already present in the filenames). =filetags-controlled-vocabulary= is a list of list of strings. Tags which are in the same list are mutually exclusive which means if one of those tags is added, all other tags of the same group are removed.
 When adding the tag *winter* to the following file:
-=test -- emacs summer.pdf=
+: test -- emacs summer.pdf
 then it is renamed to
-=test -- emacs winter.pdf=. 
+: test -- emacs winter.pdf 
 If =filetags-enforce-controlled-vocabulary= is nil then also other tags are accepted.
 If one sets
 #+BEGIN_SRC emacs-lisp
