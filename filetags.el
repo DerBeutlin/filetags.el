@@ -383,9 +383,8 @@ filetags-controlled-vocabulary and returns the list to remove them"
 (defun filetags-find-dot-filetags-in-upper-tree (dir)
   "search for .filetags file in DIR and all upper directories and return the path to file"
   (let ((file-candidat (concat dir ".filetags"))
-        (parent-dir (if (string= dir "/")
-                        nil
-                      (file-name-directory (directory-file-name dir)))))
+        (parent-dir (file-name-directory (directory-file-name dir))))
+    (when (string= parent-dir dir) (setq parent-dir nil))
     (if (file-exists-p file-candidat)
         file-candidat
       (when parent-dir
