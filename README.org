@@ -9,6 +9,7 @@ This is up until now just a hobby project to teach me elisp. So I am grateful fo
 Clone this Git-Repository and load filetags.el
 
 ** Usage
+*** Filetags
 In dired call =filetags-dired-update-tags= to add or remove tags to multiple marked files or if no files are marked to the file on point.
 The User is then prompted for tags  and kann add tags by entering "+tag". If there are already tags present in one of the files the respective action to remove this tag "-tag" is proposed. The user can enter tag actions until he hits "Perform actions". Then the tags are applied. 
 
@@ -28,3 +29,10 @@ If one sets
 (setq filetags-load-controlled-vocabulary-from-file t)
 #+END_SRC
 then the vocabulary in =filetags-controlled-vocabulary= is ignored and the controlled vocabulary is loaded from the next =.filetags= file in the upper directory tree. The syntax of this file is equal to the one in [[https://github.com/novoid/filetags#get-the-most-out-of-filetags-controlled-vocabulary-filetags][filetags]]. One can add comments with =#= and multiple tags on the same line are mutually exclusive.
+*** Date2name
+In dired call =filetags-dired-add-date-to-name= to add the modification date of the file to the filename. With the prefix *C-u* the user is instead prompted to insert a date.
+The same is true for =filetags-dired-add-datetime-to-name= only that it also adds the time.
+The format is again the same as in [[https://github.com/novoid/date2name][date2name]] of novoid. 
+: 2018-07-06_test.txt
+: 2018-07-06T13:53:09_test.txt
+Unfortunately right now this format should not be changed as it must match a corresponding regexp to remove potential timestamps already in the filename. 
