@@ -37,6 +37,10 @@
   "list of list of tags that are proposed (besides tags which are already in the filenames) if filetags-enforce-controlled-vocabulary is t then no other tags can be added
 tags in the same sublist are mutually exclusive tags"
   :group 'filetags)
+(defcustom filetags-load-controlled-vocabulary-from-file
+  nil "if t then controlled vocabulary is loaded from .filetags file in the same directory and file-tags-controlled-vocabulary is ignored"
+  :group 'filetags)
+
 (defcustom filetags-enforce-controlled-vocabulary
   nil "if t then only tags from filetags-controlled-vocabulary and tags already present in the filenames can be used"
   :group 'filetags)
@@ -152,13 +156,16 @@ tags in the same sublist are mutually exclusive tags"
 ;; taken from https://stackoverflow.com/a/2712585
 (defun filetags-flatten (l)
   "flattens the list of list L to a list containing all elements"
-  (cond ((null l) nil)
-        ((atom l) (list l))
-        (t (loop for a in l appending (filetags-flatten a)))))
-
-
-
-
+  (cond
+   ((null l) nil)
+   ((atom l)
+    (list l))
+   (t (loop for
+            a
+            in
+            l
+            appending
+            (filetags-flatten a)))))
 
 
 (defun filetags-accumulate-remove-tags-candidates (filenames)
@@ -173,7 +180,7 @@ tags in the same sublist are mutually exclusive tags"
                                                    :test 'string=)))
     (filetags-sort-and-uniq-tags (union (set-difference remove-tags tags-in-every-file
                                                         :test 'string=)
-                                        (set-difference (filetags-union filetags-controlled-vocabulary)
+                                        (set-difference (filetags-union (filetags-get-controlled-vocabulary))
                                                         tags-in-every-file
                                                         :test 'string=)))))
 
@@ -260,7 +267,7 @@ tags in the same sublist are mutually exclusive tags"
   "returns all corresponding mutually exclusive tags to TAG from
 filetags-controlled-vocabulary and returns the list to remove them"
   (let ((mutually-exclusive-tags '()))
-    (dolist (tags filetags-controlled-vocabulary)
+    (dolist (tags (filetags-get-controlled-vocabulary))
       (when (and (> (length tags) 1)
                  (seq-contains tags tag 'string=))
         (setq mutually-exclusive-tags (append mutually-exclusive-tags
@@ -277,6 +284,39 @@ filetags-controlled-vocabulary and returns the list to remove them"
     (filetags-sort-and-uniq-tags mutually-exclusive-tags)))
 
 
+(defun filetags-read-controlled-vocabulary-from-file (file)
+  "reads controlled vocabulary from a  provided .filetags file"
+  (with-temp-buffer
+    (insert-file-contents file)
+    (mapcar 'filetags-parse-vocabulary-line
+            (split-string (buffer-string)
+                          "\n"
+                          t))))
+
+
+(defun filetags-parse-vocabulary-line (line)
+  "parses one line of a .filetags file"
+  (split-string (car (split-string line "#"))
+                " "
+                t))
+
+(defun filetags-get-controlled-vocabulary ()
+  "returns controlled vocabulary either from variable or from file"
+  (if filetags-load-controlled-vocabulary-from-file
+      (filetags-read-controlled-vocabulary-from-file (filetags-find-dot-filetags-in-upper-tree (dired-current-directory)))
+    filetags-controlled-vocabulary))
+
+(defun filetags-find-dot-filetags-in-upper-tree (dir)
+  "search for .filetags file in DIR and all upper directories and return the path to file"
+  (let ((file-candidat (concat dir ".filetags"))
+        (parent-dir (if (string= dir "/")
+                        nil
+                      (file-name-directory (directory-file-name dir)))))
+    (if (file-exists-p file-candidat)
+        file-candidat
+      (when parent-dir
+        (filetags-find-dot-filetags-in-upper-tree
+         parent-dir)))))
+
 (provide 'filetags)
 ;;; filetags.el ends here
-

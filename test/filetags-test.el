@@ -180,5 +180,22 @@
     (should (equal (filetags-all-mutually-exclusive-tags-to-remove
                     tags-to-add) '("cherry" "spring" "summer" "water")))))
 
+(ert-deftest filetags-parse-vocabulary-line-parses-tags-test
+    ()
+  (let ((line "test1 test2"))
+    (should (equal (filetags-parse-vocabulary-line line) '("test1" "test2")))))
+(ert-deftest filetags-parse-vocabulary-line-ignores-whitespace-test
+    ()
+  (let ((line "test1 test2    "))
+    (should (equal (filetags-parse-vocabulary-line line) '("test1" "test2")))))
+
+(ert-deftest filetags-parse-vocabulary-line-ignores-comments-test
+    ()
+  (let ((line "test1 test2  # test  "))
+    (should (equal (filetags-parse-vocabulary-line line) '("test1" "test2")))))
+
+
+
+
 
 ;;; filetags-test.el ends here
