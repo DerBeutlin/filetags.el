@@ -76,7 +76,6 @@
 
 (ert-deftest filetags-accumulate-add-tags-candidates-are-sorted-union-of-tags-minus-tags-which-are-in-every-file-test
     ()
-  (setq filetags-controlled-vocabulary '())
   (let ((filenames '("/home/max/test -- test2 test3.txt" "/home/max/test -- test2 test1.txt"
                      "/home/max/test -- test2.txt"))
         (expected-add-candidates '("test1" "test3")))
@@ -84,14 +83,15 @@
 
 (ert-deftest filetags-accumulate-add-tags-candidates-includes-filetags-controlled-vocabulary
     ()
-  (setq filetags-controlled-vocabulary '("controlled" "test2"))
+  (setq filetags-controlled-vocabulary '(("controlled")
+                                         ("test2")))
   (let ((filenames '("/home/max/test -- test1.txt" "/home/max/test -- atest test1 test2.txt"))
         (expected-add-candidates '("atest" "controlled" "test2")))
     (should (equal (filetags-accumulate-add-tags-candidates filenames) expected-add-candidates))))
 
 (ert-deftest filetags-accumulate-add-tags-candidates-does-not-include-controlled-vocabulary-tags-which-are-in-every-file-test
     ()
-  (setq filetags-controlled-vocabulary '("controlled"))
+  (setq filetags-controlled-vocabulary '(("controlled")))
   (let ((filenames '("/home/max/test -- controlled.txt" "/home/max/test -- controlled.txt"))
         (expected-add-candidates '()))
     (should (equal (filetags-accumulate-add-tags-candidates filenames) expected-add-candidates))))
@@ -176,6 +176,49 @@
     (should (equal (filetags-remove-date old-path) "/home/max/test.txt"))
     )
   )
+
+
+(ert-deftest filetags-update-tags-obeys-to-mutually-exclusive-tags-test
+    ()
+  (setq filetags-controlled-vocabulary '(("winter" "summer")
+                                         ("winter" "water")))
+  (let ((tags-with-prefix '("+winter"))
+        (fullname "/home/max/test -- summer water.txt"))
+    (should (equal (filetags-update-tags fullname tags-with-prefix) "/home/max/test -- winter.txt"))))
+
+
+(ert-deftest filetags-mutually-exclusive-tags-to-remove-returns-mutually-exclusive-tags-test
+    ()
+  (setq filetags-controlled-vocabulary '(("winter" "summer" "spring")
+                                         ("winter" "water")))
+  (let ((tag-to-add "winter"))
+    (should (equal (filetags-mutually-exclusive-tags-to-remove
+                    tag-to-add) '("spring" "summer" "water")))))
+
+(ert-deftest filetags-all-mutally-exclusive-tags-to-remove-returns-mutually-exclusive-tags-of-tags-in-list-test
+    ()
+  (setq filetags-controlled-vocabulary '(("winter" "summer" "spring")
+                                         ("winter" "water")
+                                         ("apple" "cherry")))
+  (let ((tags-to-add '("winter" "apple")))
+    (should (equal (filetags-all-mutually-exclusive-tags-to-remove
+                    tags-to-add) '("cherry" "spring" "summer" "water")))))
+
+(ert-deftest filetags-parse-vocabulary-line-parses-tags-test
+    ()
+  (let ((line "test1 test2"))
+    (should (equal (filetags-parse-vocabulary-line line) '("test1" "test2")))))
+(ert-deftest filetags-parse-vocabulary-line-ignores-whitespace-test
+    ()
+  (let ((line "test1 test2    "))
+    (should (equal (filetags-parse-vocabulary-line line) '("test1" "test2")))))
+
+(ert-deftest filetags-parse-vocabulary-line-ignores-comments-test
+    ()
+  (let ((line "test1 test2  # test  "))
+    (should (equal (filetags-parse-vocabulary-line line) '("test1" "test2")))))
+
+
 
 
 
