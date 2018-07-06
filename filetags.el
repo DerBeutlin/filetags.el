@@ -117,7 +117,7 @@ tags in the same sublist are mutually exclusive tags"
  or adds these tags from the FULLNAME and renames the file"
   (let ((new-filename (filetags-update-tags fullname tags-with-prefix)))
     (when (not (string= fullname new-filename))
-        (dired-rename-file fullname new-filename nil))))
+      (dired-rename-file fullname new-filename nil))))
 
 (defun filetags-filter-add-tags (tags-with-prefix)
   "filter out the tags out of TAGS-WITH—PREFIX that have the + prefix"
@@ -264,44 +264,77 @@ tags in the same sublist are mutually exclusive tags"
 
 (defun string-starts-with-p (string prefix)
   "Return t if STRING starts with PREFIX."
-  (and
-   (string-match (rx-to-string `(: bos ,prefix) t)
-                 string)
-   t))
+  (and (string-match (rx-to-string `(: bos ,prefix)
+                                   t) string)
+       t))
+
+(defvar filetags-date-regexp "^[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-9][0-9]_"
+  "regexp for detecting date in front of filename")
+
+(defvar filetags-date-format "%Y-%m-%d_" "format for formatting date in front of filename")
+
+(defvar filetags-datetime-regexp "^[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-9][0-9]T[0-2][0-9].[0-5][0-9].[0-5][0-9]_"
+  "regexp for detecting datetime in front of filename")
+
+
+(defvar filetags-datetime-format "%Y-%m-%dT%H.%M.%S_"
+  "format for formatting datetime in front of filename")
 
 (defun filetags-remove-date (path)
+  "remove potential prefix dates from PATH and return the new path"
   (let ((directory (file-name-directory path))
-        (file-name file-name-nondirectory path))
-    (if (string-starts-with-p "" "test")) 
-    )
-  )
+        (file-name (file-name-nondirectory path)))
+    (concat directory
+            (replace-regexp-in-string filetags-date-regexp
+                                      ""
+                                      (replace-regexp-in-string filetags-datetime-regexp
+                                                                "" file-name)))))
 
 (defun filetags-prepend-date (path time &optional withtime)
+  "prepends TIME to PATH if WITHTIME is not nil also with time otherwise only date"
   (let ((directory (file-name-directory path))
-        (filename (file-name-nondirectory path))
-        (datestring (if withtime (format-time-string "%Y-%m-%dT%H.%M.%S_" time)(format-time-string "%Y-%m-%d_" time))))
+        (filename (filetags-remove-date (file-name-nondirectory path)))
+        (datestring (if withtime
+                        (format-time-string filetags-datetime-format
+                                            time)
+                      (format-time-string filetags-date-format time))))
     (concat directory datestring filename)))
 
 
 (defun filetags-prepend-date-write (path time &optional withtime)
+  "prepends TIME to PATH and renames the file if WITHTIME is not nil also with time otherwise only date"
   (let ((new-path (filetags-prepend-date path time withtime)))
     (when (not (string= path new-path))
-      (dired-rename-file path new-path nil))
-    )
-  )
+      (dired-rename-file path new-path nil))))
 
-
-(defun filetags-dired-add-date-to-name(arg)
-  (interactive "P")
-  (let((filenames (if (dired-get-marked-files)
-                      (dired-get-marked-files)
-                    '((dired-get-filename))))
-       )
+(defun filetags-add-date-to-name (arg &optional withtime)
+  "apply to all marked files or if no files is marked apply to the file on point the following
+   if ARG is nil get the modification time and prepend it
+   if ARG is not nil prompt for the user to input time
+   if withtime is notnil also prepend the times otherwise only the dates"
+  (let ((filenames (if (dired-get-marked-files)
+                       (dired-get-marked-files)
+                     '((dired-get-filename)))))
     (dolist (filename filenames)
-      (filetags-prepend-date-write filename (file-attribute-modification-time (file-attributes filename))))
-    )
-  )
+      (let ((date (if (not arg)
+                      (file-attribute-modification-time (file-attributes filename))
+                    (org-read-date withtime t))))
+        (filetags-prepend-date-write filename date
+                                     withtime)))))
 
+(defun filetags-dired-add-date-to-name (arg)
+  "apply to all marked files or if no files is marked apply to the file on point the following
+   if ARG is nil get the modification date and prepend it
+   if ARG is not nil prompt for the user to input date"
+  (interactive "P")
+  (filetags-add-date-to-name arg nil))
+
+(defun filetags-dired-add-datetime-to-name (arg)
+  "apply to all marked files or if no files is marked apply to the file on point the following
+   if ARG is nil get the modification time and prepend it
+   if ARG is not nil prompt for the user to input time"
+  (interactive "P")
+  (filetags-add-date-to-name arg t))
 
 (defun filetags-mutually-exclusive-tags-to-remove (tag)
   "returns all corresponding mutually exclusive tags to TAG from
@@ -332,7 +365,6 @@ filetags-controlled-vocabulary and returns the list to remove them"
             (split-string (buffer-string)
                           "\n"
                           t))))
-
 
 (defun filetags-parse-vocabulary-line (line)
   "parses one line of a .filetags file"
