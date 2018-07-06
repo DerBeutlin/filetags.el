@@ -359,12 +359,14 @@ filetags-controlled-vocabulary and returns the list to remove them"
 
 (defun filetags-read-controlled-vocabulary-from-file (file)
   "reads controlled vocabulary from a  provided .filetags file"
-  (with-temp-buffer
-    (insert-file-contents file)
-    (mapcar 'filetags-parse-vocabulary-line
-            (split-string (buffer-string)
-                          "\n"
-                          t))))
+  (if file
+      (with-temp-buffer
+        (insert-file-contents file)
+        (mapcar 'filetags-parse-vocabulary-line
+                (split-string (buffer-string)
+                              "\n"
+                              t))))
+  '(()))
 
 (defun filetags-parse-vocabulary-line (line)
   "parses one line of a .filetags file"
