@@ -4,7 +4,6 @@
 (package-file "filetags.el")
 
 (depends-on "ivy")
-(depends-on "org")
 
 (development
  (depends-on "f")

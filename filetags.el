@@ -29,7 +29,6 @@
 (require 'subr-x)
 (require 'cl)
 (require 'ivy)
-(require 'org)
 (defgroup filetags nil "A helper for managing filetags directly in the filename"
   :group 'applications)
 (defcustom filetags-delimiter " -- " "delimiter between filename and tags"
@@ -268,73 +267,7 @@ tags in the same sublist are mutually exclusive tags"
                                    t) string)
        t))
 
-(defvar filetags-date-regexp "^[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-9][0-9]_"
-  "regexp for detecting date in front of filename")
 
-(defvar filetags-date-format "%Y-%m-%d_" "format for formatting date in front of filename")
-
-(defvar filetags-datetime-regexp "^[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-9][0-9]T[0-2][0-9].[0-5][0-9].[0-5][0-9]_"
-  "regexp for detecting datetime in front of filename")
-
-
-(defvar filetags-datetime-format "%Y-%m-%dT%H.%M.%S_"
-  "format for formatting datetime in front of filename")
-
-(defun filetags-remove-date (path)
-  "remove potential prefix dates from PATH and return the new path"
-  (let ((directory (file-name-directory path))
-        (file-name (file-name-nondirectory path)))
-    (concat directory
-            (replace-regexp-in-string filetags-date-regexp
-                                      ""
-                                      (replace-regexp-in-string filetags-datetime-regexp
-                                                                "" file-name)))))
-
-(defun filetags-prepend-date (path time &optional withtime)
-  "prepends TIME to PATH if WITHTIME is not nil also with time otherwise only date"
-  (let ((directory (file-name-directory path))
-        (filename (filetags-remove-date (file-name-nondirectory path)))
-        (datestring (if withtime
-                        (format-time-string filetags-datetime-format
-                                            time)
-                      (format-time-string filetags-date-format time))))
-    (concat directory datestring filename)))
-
-
-(defun filetags-prepend-date-write (path time &optional withtime)
-  "prepends TIME to PATH and renames the file if WITHTIME is not nil also with time otherwise only date"
-  (let ((new-path (filetags-prepend-date path time withtime)))
-    (when (not (string= path new-path))
-      (dired-rename-file path new-path nil))))
-
-(defun filetags-add-date-to-name (arg &optional withtime)
-  "apply to all marked files or if no files is marked apply to the file on point the following
-   if ARG is nil get the modification time and prepend it
-   if ARG is not nil prompt for the user to input time
-   if withtime is notnil also prepend the times otherwise only the dates"
-  (let ((filenames (if (dired-get-marked-files)
-                       (dired-get-marked-files)
-                     '((dired-get-filename)))))
-    (dolist (filename filenames)
-      (let ((date (if (not arg)
-                      (file-attribute-modification-time (file-attributes filename))
-                    (org-read-date withtime t))))
-        (filetags-prepend-date-write filename date
-                                     withtime)))))
-
-(defun filetags-dired-add-date-to-name (arg)
-  "apply to all marked files or if no files is marked apply to the file on point the following
-   if ARG is nil get the modification date and prepend it
-   if ARG is not nil prompt for the user to input date"
-  (interactive "P")
-  (filetags-add-date-to-name arg nil))
-
-(defun filetags-dired-add-datetime-to-name (arg)
-  "apply to all marked files or if no files is marked apply to the file on point the following
-   if ARG is nil get the modification time and prepend it
-   if ARG is not nil prompt for the user to input time"
-  (interactive "P")
-  (filetags-add-date-to-name arg t))
 
 (defun filetags-mutually-exclusive-tags-to-remove (tag)
   "returns all corresponding mutually exclusive tags to TAG from
@@ -384,7 +317,8 @@ filetags-controlled-vocabulary and returns the list to remove them"
   "search for .filetags file in DIR and all upper directories and return the path to file"
   (let ((file-candidat (concat dir ".filetags"))
         (parent-dir (file-name-directory (directory-file-name dir))))
-    (when (string= parent-dir dir) (setq parent-dir nil))
+    (when (string= parent-dir dir)
+      (setq parent-dir nil))
     (if (file-exists-p file-candidat)
         file-candidat
       (when parent-dir
