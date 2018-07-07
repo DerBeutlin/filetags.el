@@ -229,8 +229,10 @@ tags in the same sublist are mutually exclusive tags"
                 (setq tags-with-prefix (filetags-update-tags-with-prefix entered-tag
                                                                          tags-with-prefix))
               (message "Tag Action has to start with + or -"))
-          (dolist (filename filenames)
-            (filetags-update-tags-write filename tags-with-prefix)))))))
+          (progn
+            (dolist (filename filenames)
+              (filetags-update-tags-write filename tags-with-prefix)))
+          (revert-buffer nil t t))))))
 
 
 (defun filetags-update-tags-with-prefix (entered-tag tags-with-prefix)
