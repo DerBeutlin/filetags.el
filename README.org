@@ -28,5 +28,19 @@ If one sets
 (setq filetags-load-controlled-vocabulary-from-file t)
 #+END_SRC
 then the vocabulary in =filetags-controlled-vocabulary= is ignored and the controlled vocabulary is loaded from the next =.filetags= file in the upper directory tree. The syntax of this file is equal to the one in [[https://github.com/novoid/filetags#get-the-most-out-of-filetags-controlled-vocabulary-filetags][filetags]]. One can add comments with =#= and multiple tags on the same line are mutually exclusive.
+
+*** Handeling of symbolic links 
+When changing the tags of symbolic links, the tags of the origin file are also changed. This works recursively for a chain of links.
+E.g. if one has a chain of links
+: original-file.pdf
+: link.pdf -> original-file.pdf
+: another-link.pdf -> link.pdf
+
+adding the tag *important* to =another-link.pdf= changes the files to
+: original-file -- important.pdf
+: link -- important.pdf -> original-file -- important.pdf
+: another-link -- important.pdf -> link -- important.pdf
+
+The other way round (when changing =original-file.pdf= does not work as one would have to scan the whole file system for links.
 ** Related projects
 Also inspired by novoids work: [[https://github.com/DerBeutlin/date2name.el][date2name.el]] 
