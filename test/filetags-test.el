@@ -197,5 +197,24 @@
 
 
 
+(ert-deftest filetags-should-not-rename-file-if-it-already-exists()
+  (let ((path "/tmp/filetags-test/")
+        (filename1 "test.txt")
+        (filename2 "test -- tag.txt")
+        (tags-with-prefix '("+tag")))
+    (make-directory path t)
+    (f-touch (concat path filename1))
+    (f-touch (concat path filename2))
+    (filetags-update-tags-write (concat path filename1) tags-with-prefix)
+    (should (file-exists-p (concat path filename1)))
+    (should (file-exists-p (concat path filename2)))
+    (delete-directory path t)
+    )
+  )
+
+
+
+
+
 
 ;;; filetags-test.el ends here
