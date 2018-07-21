@@ -202,6 +202,7 @@
         (filename1 "test.txt")
         (filename2 "test -- tag.txt")
         (tags-with-prefix '("+tag")))
+    (delete-directory path t)
     (make-directory path t)
     (f-touch (concat path filename1))
     (f-touch (concat path filename2))

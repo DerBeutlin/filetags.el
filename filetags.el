@@ -116,7 +116,7 @@ tags in the same sublist are mutually exclusive tags"
  or adds these tags from the FULLNAME and renames the file"
   (let ((new-filename (filetags-update-tags fullname tags-with-prefix)))
     (when (not (string= fullname new-filename))
-      (progn (rename-file fullname new-filename nil) ))))
+      (if (not (file-exists-p new-filename)) (rename-file fullname new-filename nil) (message (format "File  %s already exists" new-filename)) ))))
 
 (defun filetags-filter-add-tags (tags-with-prefix)
   "filter out the tags out of TAGS-WITH—PREFIX that have the + prefix"
