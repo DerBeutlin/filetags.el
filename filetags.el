@@ -117,7 +117,7 @@ tags in the same sublist are mutually exclusive tags"
   (let ((new-filename (filetags-update-tags fullname tags-with-prefix)))
     (progn
       (when (not (string= fullname new-filename))
-        (rename-file fullname new-filename nil))
+        (if (not (file-exists-p new-filename))(rename-file fullname new-filename nil) (message (format "File %s already exists" new-filename))))
       (when (not (string= (file-truename new-filename) new-filename))
         (filetags-rename-link-origin-and-relink new-filename tags-with-prefix))
       new-filename)
