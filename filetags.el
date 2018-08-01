@@ -118,10 +118,11 @@ tags in the same sublist are mutually exclusive tags"
     (progn
       (when (not (string= fullname new-filename))
         (rename-file fullname new-filename nil))
-      (when (not (string= (file-truename new-filename) new-filename))
-        (filetags-rename-link-origin-and-relink new-filename tags-with-prefix))
-      new-filename)
-    ))
+      (when (not (string= (file-truename new-filename)
+                          new-filename))
+        (filetags-rename-link-origin-and-relink new-filename
+                                                tags-with-prefix))
+      new-filename)))
 
 (defun filetags-filter-add-tags (tags-with-prefix)
   "filter out the tags out of TAGS-WITH—PREFIX that have the + prefix"
@@ -302,10 +303,11 @@ filetags-controlled-vocabulary and returns the list to remove them"
   (if file
       (with-temp-buffer
         (insert-file-contents file)
-        (mapcar 'filetags-parse-vocabulary-line
-                (split-string (buffer-string)
-                              "\n"
-                              t)))
+        (remove nil
+                (mapcar 'filetags-parse-vocabulary-line
+                        (split-string (buffer-string)
+                                      "\n"
+                                      t))))
     '(())))
 
 (defun filetags-parse-vocabulary-line (line)
@@ -334,12 +336,10 @@ filetags-controlled-vocabulary and returns the list to remove them"
 
 (defun filetags-rename-link-origin-and-relink (path tags-with-prefix)
   (let ((origin-path (file-chase-links path 1)))
-    (when (not (string= origin-path path ))
+    (when (not (string= origin-path path))
       (let* ((origin-new-filename (filetags-update-tags-write origin-path tags-with-prefix)))
-        (make-symbolic-link origin-new-filename path t)
-        )
-      ))
-  )
+        (make-symbolic-link origin-new-filename path
+                            t)))))
 
 (provide 'filetags)
 ;;; filetags.el ends here
