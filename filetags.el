@@ -303,11 +303,19 @@ filetags-controlled-vocabulary and returns the list to remove them"
   (if file
       (with-temp-buffer
         (insert-file-contents file)
-        (remove nil
-                (mapcar 'filetags-parse-vocabulary-line
-                        (split-string (buffer-string)
-                                      "\n"
-                                      t))))
+        (let ((controlled-vocabulary '(()))
+              (lines (split-string (buffer-string)
+                                   "\n")))
+          (dolist (line lines)
+            (let ((included-file (filetags-check-for-included-files line)))
+              (when included-file
+                (dolist (tag-line (filetags-read-controlled-vocabulary-from-file
+                                   included-file))
+                  (push tag-line controlled-vocabulary))))
+            (let ((tag-line (filetags-parse-vocabulary-line line)))
+              (when tag-line
+                (push tag-line controlled-vocabulary))))
+          (remove nil controlled-vocabulary)))
     '(())))
 
 (defun filetags-parse-vocabulary-line (line)
@@ -315,6 +323,9 @@ filetags-controlled-vocabulary and returns the list to remove them"
   (split-string (car (split-string line "#"))
                 " "
                 t))
+(defun filetags-check-for-included-files (line)
+  (when (s-starts-with? "#include" line)
+    (string-trim (string-remove-prefix "#include" line))))
 
 (defun filetags-get-controlled-vocabulary ()
   "returns controlled vocabulary either from variable or from file"

@@ -245,8 +245,8 @@
     (make-directory path t)
     (create-filetags-file (concat path filename)
                           tag-lines)
-    (should (equal (filetags-read-controlled-vocabulary-from-file (concat path filename)) '(("test1")
-                                                                                            ("test2"))))
+    (should (equal (filetags-read-controlled-vocabulary-from-file (concat path filename)) '(("test2")
+                                                                                            ("test1"))))
     (delete-directory path t)))
 
 (ert-deftest filetags-can-read-in-controlled-vocabulary-from-file-with-comments-test
@@ -258,8 +258,8 @@
     (make-directory path t)
     (create-filetags-file (concat path filename)
                           tag-lines)
-    (should (equal (filetags-read-controlled-vocabulary-from-file (concat path filename)) '(("test1")
-                                                                                            ("test2"))))
+    (should (equal (filetags-read-controlled-vocabulary-from-file (concat path filename)) '(("test2")
+                                                                                            ("test1"))))
     (delete-directory path t)))
 
 
@@ -272,9 +272,32 @@
     (make-directory path t)
     (create-filetags-file (concat path filename)
                           tag-lines)
-    (should (equal (filetags-read-controlled-vocabulary-from-file (concat path filename)) '(("summer" "winter")
-                                                                                            ("test1" "test2"))))
+    (should (equal (filetags-read-controlled-vocabulary-from-file (concat path filename)) '(("test1" "test2")
+                                                                                            ("summer" "winter"))))
     (delete-directory path t)))
 
+
+(ert-deftest filetags-can-read-in-controlled-vocabulary-from-file-which-include-other-files-test
+    ()
+  (let* ((path "/tmp/filetags-test/")
+         (filename1 "filetags")
+         (filename2 "filetags2")
+         (tag-lines1 (list (concat "#include "
+                                   (concat path filename2))
+                           "test1"))
+         (tag-lines2 '("test2")))
+    (delete-directory path t)
+    (make-directory path t)
+    (create-filetags-file (concat path filename1)
+                          tag-lines1)
+    (create-filetags-file (concat path filename2)
+                          tag-lines2)
+    (should (equal (filetags-read-controlled-vocabulary-from-file (concat path filename1)) '(("test1")
+                                                                                             ("test2"))))
+    (delete-directory path t)))
+
+(ert-deftest filetags-check-for-included-files-returns-included-file-test
+    ()
+  (should (equal (filetags-check-for-included-files "#include /tmp/test") "/tmp/test")))
 
 ;;; filetags-test.el ends here
