@@ -1,3 +1,5 @@
+[[https://travis-ci.org/DerBeutlin/filetags.el][file:https://travis-ci.org/DerBeutlin/filetags.el.svg?branch=master]]
+
 * Filetags
 Filetags is an Emacs package inspired by [[https://github.com/novoid/filetags][filetags]] which manages filetags directly in the filename. By default tags are space seperated words seperated from the rest of the filename by  =--=  e.g.
 : image -- holiday italy.png
