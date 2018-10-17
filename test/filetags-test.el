@@ -1,6 +1,24 @@
 ;;; filetags-test.el --- Tests for filetags
 (load-file "filetags.el")
+(load-file "test/test-helper.el")
 (require 'filetags)
+
+(ert-deftest filetags-trim-action-removes-plus-from-tag-in-beginning-test()
+  (should (equal (filetags-trim-action "+test" "+") "test"))
+  )
+
+(ert-deftest filetags-trim-action-removes-minus-from-tag-in-beginning-test()
+  (should (equal (filetags-trim-action "-test" "-") "test"))
+  )
+
+(ert-deftest filetags-trim-action-ignores-minus-from-tag-in-middle-test()
+  (should (equal (filetags-trim-action "te-st" "-") "te-st"))
+  )
+
+(ert-deftest filetags-trim-all-actions-trims-all-actions-test()
+  (should (equal (filetags-trim-all-actions "-test") "test"))
+  (should (equal (filetags-trim-all-actions "+test") "test"))
+  )
 
 (ert-deftest extract-filetags-from-filename-with-tags-and-extension-test
     ()
@@ -199,13 +217,11 @@
         (filename "test.txt")
         (linkname "link.txt")
         (tags-with-prefix '("+tag")))
-    (delete-directory path t) 
-    (make-directory path t)
+    (ensure-empty-directory path)
     (f-touch (concat path filename))
     (make-symbolic-link (concat path filename)  (concat path linkname) t)
     (filetags-update-tags-write (concat path linkname) tags-with-prefix)
     (should (equal (file-truename (concat path "link -- tag.txt")) (concat path "test -- tag.txt")))
-   (delete-directory path t) 
     )
   )
 
@@ -215,8 +231,7 @@
         (linkname1 "link.txt")
         (linkname2 "anotherlink.txt")
         (tags-with-prefix '("+tag")))
-    (delete-directory path t) 
-    (make-directory path t)
+    (ensure-empty-directory path)
     (f-touch (concat path filename))
     (make-symbolic-link (concat path filename)  (concat path linkname1) t)
     (make-symbolic-link (concat path linkname1)  (concat path linkname2) t)
@@ -224,7 +239,6 @@
     (should (equal (file-truename (concat path "anotherlink -- tag.txt")) (concat path "test -- tag.txt")))
     (should (equal (file-truename (concat path "link -- tag.txt")) (concat path "test -- tag.txt")))
     (should (equal (file-chase-links (concat path "anotherlink -- tag.txt") 1) (concat path "link -- tag.txt")))
-    (delete-directory path t) 
     )
   )
 
@@ -233,14 +247,12 @@
         (filename1 "test.txt")
         (filename2 "test -- tag.txt")
         (tags-with-prefix '("+tag")))
-    (delete-directory path t)
-    (make-directory path t)
+    (ensure-empty-directory path)
     (f-touch (concat path filename1))
     (f-touch (concat path filename2))
     (filetags-update-tags-write (concat path filename1) tags-with-prefix)
     (should (file-exists-p (concat path filename1)))
     (should (file-exists-p (concat path filename2)))
-    (delete-directory path t)
     )
   )
 

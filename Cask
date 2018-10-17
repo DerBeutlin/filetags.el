@@ -4,6 +4,8 @@
 (package-file "filetags.el")
 
 (depends-on "ivy")
+(depends-on "s")
+(depends-on "seq")
 
 (development
  (depends-on "f")

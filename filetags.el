@@ -126,7 +126,7 @@ tags in the same sublist are mutually exclusive tags"
 (defun filetags-filter-add-tags (tags-with-prefix)
   "filter out the tags out of TAGS-WITH—PREFIX that have the + prefix"
   (mapcar (lambda (str)
-            (string-trim-left str "+"))
+            (filetags-trim-action str "+"))
           (seq-filter (lambda (tag)
                         (s-starts-with? "+" tag))
                       tags-with-prefix)))
@@ -134,7 +134,7 @@ tags in the same sublist are mutually exclusive tags"
 (defun filetags-filter-remove-tags (tags-with-prefix)
   "filter out the tags out of TAGS-WITH—PREFIX that have the - prefix"
   (mapcar (lambda (str)
-            (string-trim-left str "-"))
+            (filetags-trim-action str "-"))
           (seq-filter (lambda (tag)
                         (s-starts-with? "-" tag))
                       tags-with-prefix)))
@@ -251,11 +251,17 @@ tags in the same sublist are mutually exclusive tags"
 
 (defun filetags-inverse-tag (tag)
   "if TAG is prefixed with + return the tag prefixed with - and vis versa"
-  (let ((bare-tag (string-trim-left tag "+\\|-"))
+  (let ((bare-tag (filetags-trim-all-actions tag))
         (prefix-tag (substring tag 0 1)))
     (if (string= prefix-tag "+")
         (filetags-prepend "-" bare-tag)
       (filetags-prepend "+" bare-tag))))
+
+(defun filetags-trim-action (tag action)
+  (if (s-starts-with? action tag) (substring tag 1) tag))
+
+(defun filetags-trim-all-actions (tag)
+  (if (s-starts-with? "+" tag) (filetags-trim-action tag "+") (filetags-trim-action tag "-")))
 
 
 (defun filetags-construct-candidates (add-candidates remove-candidates tags-with-prefix)
