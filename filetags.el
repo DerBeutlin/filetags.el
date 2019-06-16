@@ -37,7 +37,7 @@
   :group 'applications)
 
 (defcustom filetags-delimiter " -- " "Delimiter between filename and tags."
-  :group 'filetags :type 'string)
+   :type 'string)
 
 (defcustom filetags-controlled-vocabulary '(())
   "List of lists of possible filetags.
@@ -46,20 +46,20 @@ filename are used for the autocompletion.
 If the variable `filetags-enforce-controlled-vocabulary' is t
 then no other tags can be added.
 Tags in the same sublist are mutually exclusive tags."
-  :group 'filetags :type 'sexp)
+  :type 'sexp)
 
 (defcustom filetags-load-controlled-vocabulary-from-file nil
   "Toggle if filetags should be loaded from file.
 If t then the variable `filetags-controlled-vocabulary' is ignored
 and the tags are loaded from a file with name .filetags in the upper tree."
-  :group 'filetags :type 'bool)
+  :type 'bool)
 
 (defcustom filetags-enforce-controlled-vocabulary nil
   "If t, only tags in the controlled vocabulary can be used.
 The controlled vocabulary is either loaded from file
 if the variable `filetags-load-controlled-vocabulary-from-file' is t
 or is set in the variable `filetags-controlled-vocabulary'."
-  :group 'filetags :type 'bool)
+   :type 'bool)
 
 (defun filetags-extract-filetags (filename)
   "Extract the tags from FILENAME and return them as a sorted, unique list."
