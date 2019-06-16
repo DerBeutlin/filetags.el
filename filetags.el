@@ -134,9 +134,9 @@ Tags with a + as prefix are appended.
 Tags with a - as prefix are removed."
   (let ((new-filename (filetags-update-tags fullname tags-with-prefix)))
     (progn
-      (when (not (string= fullname new-filename))
+      (unless (string= fullname new-filename)
         (if (not (file-exists-p new-filename))(rename-file fullname new-filename nil) (message (format "File %s already exists" new-filename))))
-      (when (not (string= (file-truename new-filename) new-filename))
+      (unless (string= (file-truename new-filename) new-filename)
         (filetags-rename-link-origin-and-relink new-filename tags-with-prefix))
       new-filename)))
 
@@ -219,7 +219,7 @@ If \"Perform Actions\" is chosen return nil otherwise return the chosen tag."
 (let ((new-tag
        (completing-read (format "Add(+)/Remove(-) Tags (%s): " (mapconcat 'identity selected-tags))
                         (push "Perform Actions" collection) nil filetags-enforce-controlled-vocabulary)))
-  (when (not (string= new-tag "Perform Actions")) new-tag)))
+  (unless (string= new-tag "Perform Actions") new-tag)))
 
 
 (defun filetags-dired-update-tags ()
@@ -263,7 +263,7 @@ If the inverse tag action is already present remove it."
   (let* ((inverse-entered-tag (filetags-inverse-tag entered-tag)))
     (if (member inverse-entered-tag tags-with-prefix)
         (setq tags-with-prefix (delete inverse-entered-tag tags-with-prefix))
-      (when (not (member entered-tag tags-with-prefix))
+      (unless (member entered-tag tags-with-prefix)
         (push entered-tag tags-with-prefix)))))
 
 (defun filetags-inverse-tag (tag)
@@ -362,7 +362,7 @@ depends on the value of the variable
 (defun filetags-rename-link-origin-and-relink (path tags-with-prefix)
   "Add TAGS-WITH—PREFIX to PATH keep existing links intact."
   (let ((origin-path (file-chase-links path 1)))
-    (when (not (string= origin-path path ))
+    (unless (string= origin-path path )
       (let* ((origin-new-filename (filetags-update-tags-write origin-path tags-with-prefix)))
         (make-symbolic-link origin-new-filename path t)))))
 
