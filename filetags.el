@@ -1,6 +1,6 @@
 ;;; filetags.el --- package to manage filetags in filename  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2018  Max Beutelspacher
+;; Copyright (C) 2019  Max Beutelspacher
 
 ;; Author: Max Beutelspacher
 ;; URL: https://github.com/DerBeutlin/filetags.el
