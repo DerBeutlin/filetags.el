@@ -1,4 +1,4 @@
-;;; filetags.el --- package to manage filetags in filename  -*- lexical-binding: t; -*-
+;;; filetags.el --- Package to manage filetags in filename  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Max Beutelspacher
 
@@ -116,7 +116,7 @@ using the delimiter set in the variable `filetags-delimiter'."
             new_file_name)))
 
 (defun filetags-update-tags (fullname tags-with-prefix)
-  "Append or remove TAGS-WITH—PREFIX from/to FULLNAME depending on the prefix.
+  "Append or remove TAGS-WITH-PREFIX from/to FULLNAME depending on the prefix.
 Tags with a + as prefix are appended.
 Tags with a - as prefix are removed."
   (let* ((tags-to-add (filetags-filter-add-tags tags-with-prefix))
@@ -129,7 +129,7 @@ Tags with a - as prefix are removed."
 
 (defun filetags-update-tags-write (fullname tags-with-prefix)
   "Rename the file FULLNAME with added or removed tags.
-Tags in TAGS—WITH—PREFIX are removed or added depending on their prefix.
+Tags in TAGS-WITH-PREFIX are removed or added depending on their prefix.
 Tags with a + as prefix are appended.
 Tags with a - as prefix are removed."
   (let ((new-filename (filetags-update-tags fullname tags-with-prefix)))
@@ -141,7 +141,7 @@ Tags with a - as prefix are removed."
       new-filename)))
 
 (defun filetags-filter-add-tags (tags-with-prefix)
-  "Filter out the tags out of TAGS-WITH—PREFIX that have the + prefix."
+  "Filter out the tags out of TAGS-WITH-PREFIX that have the + prefix."
   (mapcar (lambda (str)
             (filetags-trim-action str "+"))
           (seq-filter (lambda (tag)
@@ -149,7 +149,7 @@ Tags with a - as prefix are removed."
                       tags-with-prefix)))
 
 (defun filetags-filter-remove-tags (tags-with-prefix)
-  "Filter out the tags out of TAGS-WITH—PREFIX that have the - prefix."
+  "Filter out the tags out of TAGS-WITH-PREFIX that have the - prefix."
   (mapcar (lambda (str)
             (filetags-trim-action str "-"))
           (seq-filter (lambda (tag)
@@ -257,7 +257,7 @@ or the file on point otherwise."
 
 
 (defun filetags-update-tags-with-prefix (entered-tag tags-with-prefix)
-  "Merge ENTERED-TAG into TAGS—WITH—PREFIX.
+  "Merge ENTERED-TAG into TAGS-WITH-PREFIX.
 Add the tag if not already present.
 If the inverse tag action is already present remove it."
   (let* ((inverse-entered-tag (filetags-inverse-tag entered-tag)))
@@ -284,7 +284,7 @@ If the inverse tag action is already present remove it."
 
 
 (defun filetags-construct-candidates (add-candidates remove-candidates tags-with-prefix)
-  "Merge ADD—candidates and REMOVE-CANDIDATES into TAGS-with-PREFIX.
+  "Merge ADD-CANDIDATES and REMOVE-CANDIDATES into TAGS-WITH-PREFIX.
 ADD candidates only if not already present and add the inverses of TAGS—WITH—PREFIX."
   (let ((inverse-tags (mapcar 'filetags-inverse-tag tags-with-prefix))
         (unused-add-candidates (cl-set-difference add-candidates tags-with-prefix
@@ -360,7 +360,7 @@ depends on the value of the variable
          parent-dir)))))
 
 (defun filetags-rename-link-origin-and-relink (path tags-with-prefix)
-  "Add TAGS-WITH—PREFIX to PATH keep existing links intact."
+  "Add TAGS-WITH-PREFIX to PATH keep existing links intact."
   (let ((origin-path (file-chase-links path 1)))
     (unless (string= origin-path path )
       (let* ((origin-new-filename (filetags-update-tags-write origin-path tags-with-prefix)))
