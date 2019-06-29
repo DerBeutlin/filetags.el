@@ -28,7 +28,6 @@
 
 ;;; Code:
 (require 'seq)
-(require 's)
 (require 'subr-x)
 (require 'cl-lib)
 (require 'dired)
@@ -145,7 +144,7 @@ Tags with a - as prefix are removed."
   (mapcar (lambda (str)
             (filetags-trim-action str "+"))
           (seq-filter (lambda (tag)
-                        (s-starts-with? "+" tag))
+                        (string-prefix-p "+" tag))
                       tags-with-prefix)))
 
 (defun filetags-filter-remove-tags (tags-with-prefix)
@@ -153,7 +152,7 @@ Tags with a - as prefix are removed."
   (mapcar (lambda (str)
             (filetags-trim-action str "-"))
           (seq-filter (lambda (tag)
-                        (s-starts-with? "-" tag))
+                        (string-prefix-p "-" tag))
                       tags-with-prefix)))
 
 (defun filetags-union (list)
@@ -276,11 +275,11 @@ If the inverse tag action is already present remove it."
 
 (defun filetags-trim-action (tag action)
   "Remove ACTION from prefixed TAG."
-  (if (s-starts-with? action tag) (substring tag 1) tag))
+  (if (string-prefix-p action tag) (substring tag 1) tag))
 
 (defun filetags-trim-all-actions (tag)
   "Remove all actions from prefixed TAG."
-  (if (s-starts-with? "+" tag) (filetags-trim-action tag "+") (filetags-trim-action tag "-")))
+  (if (string-prefix-p "+" tag) (filetags-trim-action tag "+") (filetags-trim-action tag "-")))
 
 
 (defun filetags-construct-candidates (add-candidates remove-candidates tags-with-prefix)

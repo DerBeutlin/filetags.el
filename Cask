@@ -3,7 +3,6 @@
 
 (package-file "filetags.el")
 
-(depends-on "s")
 (depends-on "seq")
 
 (development
