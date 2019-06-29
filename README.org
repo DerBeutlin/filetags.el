@@ -3,6 +3,7 @@
 * Filetags
 Filetags is an Emacs package inspired by [[https://github.com/novoid/filetags][filetags]] which manages filetags directly in the filename. By default tags are space seperated words seperated from the rest of the filename by  =--=  e.g.
 : image -- holiday italy.png
+One can change the seperator between the filename and the tags as well as the seperator between the tags by customizing =filetags-delimiter-between-filename-and-tags= and =filetags-delimiter-between-tags=.
 This package provides a simple function to update these tags from the dired file browser and the option to restrict tags to a controlled vocabulary.
 
 This is up until now just a hobby project to teach me elisp. So I am grateful for every feedback.
