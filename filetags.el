@@ -87,14 +87,11 @@ Tags are separated from the rest of the filename
 using the delimiter set in the variable `filetags-delimiter'."
   (let ((new_filename (filetags-extract-filename-without-tags filename))
         (extension (file-name-extension filename)))
-    (if tags
-        (concat new_filename
-                filetags-delimiter
-                (mapconcat 'identity (filetags-sort-and-uniq-tags tags) " ")
-                (when extension ".") extension)
-      (concat new_filename
-              (when extension ".")
-              extension))))
+    (concat new_filename
+            (when tags
+              (concat filetags-delimiter
+                      (mapconcat 'identity (filetags-sort-and-uniq-tags tags) " ")))
+            (when extension ".") extension)))
 
 (defun filetags-add-tags-to-filename (fullname tags)
   "Append TAGS in alphabetical and unique order to FULLNAME."
