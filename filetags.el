@@ -214,7 +214,7 @@ SELECTED-TAGS is a list of already selected tags.
 If \"Perform Actions\" is chosen return nil otherwise return the chosen tag."
 (let ((new-tag
        (completing-read (format "Add(+)/Remove(-) Tags (%s): " (mapconcat 'identity selected-tags " "))
-                        (push "Perform Actions" collection) nil filetags-enforce-controlled-vocabulary)))
+                        (push "Perform Actions" collection) nil filetags-enforce-controlled-vocabulary nil nil "Perform Actions")))
   (unless (string= new-tag "Perform Actions") new-tag)))
 
 
