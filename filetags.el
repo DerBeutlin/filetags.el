@@ -348,12 +348,12 @@ depends on the value of the variable
 
 (defun filetags-find-dot-filetags-in-upper-tree (dir)
   "Search for .filetags file in DIR and all upper directories and return the path to file."
-  (let ((file-candidat (concat (file-name-as-directory dir) ".filetags"))
+  (let ((file-candidate (concat (file-name-as-directory dir) ".filetags"))
         (parent-dir (file-name-directory (directory-file-name dir))))
     (when (string= parent-dir dir)
       (setq parent-dir nil))
-    (if (file-exists-p file-candidat)
-        file-candidat
+    (if (file-exists-p file-candidate)
+        file-candidate
       (when parent-dir
         (filetags-find-dot-filetags-in-upper-tree
          parent-dir)))))
