@@ -220,6 +220,7 @@ If \"Perform Actions\" is chosen return nil otherwise return the chosen tag."
   (unless (string= new-tag "Perform Actions") new-tag)))
 
 
+;;;###autoload
 (defun filetags-dired-update-tags ()
   "Prompt the user for tag-actions and perform these actions.
 The action can be to add a tag with prefix +
