@@ -25,6 +25,8 @@ before_install:
   - export PATH="$HOME/bin:$PATH"
   # Download the makefile to emacs-travis.mk
   - wget 'https://raw.githubusercontent.com/flycheck/emacs-travis/master/emacs-travis.mk'
+  # Try https://github.com/flycheck/emacs-travis/issues/22#issuecomment-501659346
+  - sed -i -e 's/^install_cask/install_emacs:\ install_gnutls\n\n\0/' emacs-travis.mk
   # Install Emacs (according to $EMACS_VERSION) and Cask
   - make -f emacs-travis.mk install_emacs
   - make -f emacs-travis.mk install_cask
