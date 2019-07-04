@@ -244,8 +244,8 @@ or the file on point otherwise."
                                                                                remove-candidates tags-with-prefix)
                                                 tags-with-prefix))
         (if entered-tag
-            (if (or (s-starts-with-p "+" entered-tag)
-                    (s-starts-with-p "-" entered-tag))
+            (if (or (string-prefix-p "+" entered-tag)
+                    (string-prefix-p "-" entered-tag))
                 (setq tags-with-prefix (filetags-update-tags-with-prefix entered-tag
                                                                          tags-with-prefix))
               (message "Tag Action has to start with + or -"))
