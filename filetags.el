@@ -38,7 +38,8 @@
 (defcustom filetags-delimiter-between-filename-and-tags " -- " "Delimiter between filename and tags."
    :type 'string)
 
-(defcustom filetags-delimiter-between-tags " " "Delimiter between individual tags.")
+(defcustom filetags-delimiter-between-tags " " "Delimiter between individual tags."
+  :type 'string)
 
 (defcustom filetags-controlled-vocabulary '(())
   "List of lists of possible filetags.
