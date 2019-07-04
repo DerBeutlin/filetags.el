@@ -159,7 +159,6 @@ Tags with a - as prefix are removed."
   "Return the sorted and unique union of a list of list of strings LIST."
   (filetags-sort-and-uniq-tags (filetags-flatten list)))
 
-;; 
 (defun filetags-intersection (l &rest rest)
   "Return the sorted and unique intersection of a list of list of strings L.
 REST are optional arguments like providing the test method using :test.
@@ -212,7 +211,7 @@ to form the list."
   (mapcar (lambda (str) (filetags-prepend prefix str)) tags))
 
 (defun filetags-completing-read-tag (collection selected-tags)
-"Completing read function for filetags with collection COLLECTION.
+  "Completing read function for filetags with collection COLLECTION.
 SELECTED-TAGS is a list of already selected tags.
 If \"Perform Actions\" is chosen return nil otherwise return the chosen tag."
 (let ((new-tag
@@ -300,7 +299,7 @@ ADD candidates only if not already present and add the inverses of TAGSâ€”WITHâ€
 Mutually exclusive tags are the tags in a sublist in the variable
 `filetags-controlled-vocabulary' or which are in the same line in
 the .filetags file."
-  (let ((mutually-exclusive-tags '()))
+  (let (mutually-exclusive-tags)
     (dolist (tags (filetags-get-controlled-vocabulary))
       (when (and (> (length tags) 1)
                  (seq-contains tags tag #'string=))
@@ -313,7 +312,7 @@ the .filetags file."
 Mutually exclusive tags are the tags in a sublist in the variable
 `filetags-controlled-vocabulary' or which are in the same line in
 the .filetags file."
-  (let ((mutually-exclusive-tags '()))
+  (let (mutually-exclusive-tags)
     (dolist (tag tags)
       (setq mutually-exclusive-tags (append mutually-exclusive-tags
                                             (filetags-mutually-exclusive-tags-to-remove
