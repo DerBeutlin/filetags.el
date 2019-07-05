@@ -38,7 +38,8 @@
 (defcustom filetags-delimiter-between-filename-and-tags " -- " "Delimiter between filename and tags."
    :type 'string)
 
-(defcustom filetags-delimiter-between-tags " " "Delimiter between individual tags.")
+(defcustom filetags-delimiter-between-tags " " "Delimiter between individual tags."
+  :type 'string)
 
 (defcustom filetags-controlled-vocabulary '(())
   "List of lists of possible filetags.
@@ -92,7 +93,7 @@ using the delimiter set in the variable `filetags-delimiter-between-filename-and
     (concat new_filename
             (when tags
               (concat filetags-delimiter-between-filename-and-tags
-                      (mapconcat 'identity (filetags-sort-and-uniq-tags tags) filetags-delimiter-between-tags)))
+                      (mapconcat #'identity (filetags-sort-and-uniq-tags tags) filetags-delimiter-between-tags)))
             (when extension ".") extension)))
 
 (defun filetags-add-tags-to-filename (fullname tags)
@@ -158,7 +159,6 @@ Tags with a - as prefix are removed."
   "Return the sorted and unique union of a list of list of strings LIST."
   (filetags-sort-and-uniq-tags (filetags-flatten list)))
 
-;; 
 (defun filetags-intersection (l &rest rest)
   "Return the sorted and unique intersection of a list of list of strings L.
 REST are optional arguments like providing the test method using :test.
@@ -167,9 +167,9 @@ taken from https://stackoverflow.com/a/31422481"
                                 ((null l) nil)
                                 ((null (cdr l))
                                  (car l))
-                                (t (apply 'cl-intersection
+                                (t (apply #'cl-intersection
                                           (car l)
-                                          (apply 'filetags-intersection
+                                          (apply #'filetags-intersection
                                                  (cdr l) rest)
                                           rest)))))
 
@@ -184,7 +184,7 @@ taken from https://stackoverflow.com/a/2712585"
 
 (defun filetags-accumulate-remove-tags-candidates (filenames)
   "Accumulate all tags in FILENAMES to form a list of candidates to remove."
-  (filetags-union (mapcar 'filetags-extract-filetags filenames)))
+  (filetags-union (mapcar #'filetags-extract-filetags filenames)))
 
 (defun filetags-accumulate-add-tags-candidates (filenames)
   "Form a list of possible candidates for removal.
@@ -192,14 +192,14 @@ Accumulate all tags from the controlled vocabulary which are not in FILENAMES
 to form the list."
   (let ((remove-tags (filetags-accumulate-remove-tags-candidates
                       filenames))
-        (tags-in-every-file (filetags-intersection (mapcar 'filetags-extract-filetags filenames)
-                                                   :test 'string=)))
+        (tags-in-every-file (filetags-intersection (mapcar #'filetags-extract-filetags filenames)
+                                                   :test #'string=)))
     (filetags-sort-and-uniq-tags (filetags-union (list
                                                   (cl-set-difference remove-tags tags-in-every-file
-                                                                     :test 'string=)
+                                                                     :test #'string=)
                                                   (cl-set-difference (filetags-union (filetags-get-controlled-vocabulary))
                                                                      tags-in-every-file
-                                                                     :test 'string=))))))
+                                                                     :test #'string=))))))
 
 (defun filetags-prepend (prefix tag)
   "Prepend PREFIX to TAG."
@@ -211,11 +211,11 @@ to form the list."
   (mapcar (lambda (str) (filetags-prepend prefix str)) tags))
 
 (defun filetags-completing-read-tag (collection selected-tags)
-"Completing read function for filetags with collection COLLECTION.
+  "Completing read function for filetags with collection COLLECTION.
 SELECTED-TAGS is a list of already selected tags.
 If \"Perform Actions\" is chosen return nil otherwise return the chosen tag."
 (let ((new-tag
-       (completing-read (format "Add(+)/Remove(-) Tags (%s): " (mapconcat 'identity selected-tags " "))
+       (completing-read (format "Add(+)/Remove(-) Tags (%s): " (mapconcat #'identity selected-tags " "))
                         (push "Perform Actions" collection) nil filetags-enforce-controlled-vocabulary nil nil "Perform Actions")))
   (unless (string= new-tag "Perform Actions") new-tag)))
 
@@ -244,8 +244,8 @@ or the file on point otherwise."
                                                                                remove-candidates tags-with-prefix)
                                                 tags-with-prefix))
         (if entered-tag
-            (if (or (s-starts-with-p "+" entered-tag)
-                    (s-starts-with-p "-" entered-tag))
+            (if (or (string-prefix-p "+" entered-tag)
+                    (string-prefix-p "-" entered-tag))
                 (setq tags-with-prefix (filetags-update-tags-with-prefix entered-tag
                                                                          tags-with-prefix))
               (message "Tag Action has to start with + or -"))
@@ -285,7 +285,7 @@ If the inverse tag action is already present remove it."
 (defun filetags-construct-candidates (add-candidates remove-candidates tags-with-prefix)
   "Merge ADD-CANDIDATES and REMOVE-CANDIDATES into TAGS-WITH-PREFIX.
 ADD candidates only if not already present and add the inverses of TAGS—WITH—PREFIX."
-  (let ((inverse-tags (mapcar 'filetags-inverse-tag tags-with-prefix))
+  (let ((inverse-tags (mapcar #'filetags-inverse-tag tags-with-prefix))
         (unused-add-candidates (cl-set-difference add-candidates tags-with-prefix
                                                :test 'string=))
         (unused-remove-candidates (cl-set-difference remove-candidates tags-with-prefix
@@ -299,10 +299,10 @@ ADD candidates only if not already present and add the inverses of TAGS—WITH�
 Mutually exclusive tags are the tags in a sublist in the variable
 `filetags-controlled-vocabulary' or which are in the same line in
 the .filetags file."
-  (let ((mutually-exclusive-tags '()))
+  (let (mutually-exclusive-tags)
     (dolist (tags (filetags-get-controlled-vocabulary))
       (when (and (> (length tags) 1)
-                 (seq-contains tags tag 'string=))
+                 (seq-contains tags tag #'string=))
         (setq mutually-exclusive-tags (append mutually-exclusive-tags
                                               (delete tag tags)))))
     (filetags-sort-and-uniq-tags mutually-exclusive-tags)))
@@ -312,7 +312,7 @@ the .filetags file."
 Mutually exclusive tags are the tags in a sublist in the variable
 `filetags-controlled-vocabulary' or which are in the same line in
 the .filetags file."
-  (let ((mutually-exclusive-tags '()))
+  (let (mutually-exclusive-tags)
     (dolist (tag tags)
       (setq mutually-exclusive-tags (append mutually-exclusive-tags
                                             (filetags-mutually-exclusive-tags-to-remove
@@ -325,7 +325,7 @@ the .filetags file."
   (if file
       (with-temp-buffer
         (insert-file-contents file)
-        (mapcar 'filetags-parse-vocabulary-line
+        (mapcar #'filetags-parse-vocabulary-line
                 (split-string (buffer-string)
                               "\n"
                               t)))
