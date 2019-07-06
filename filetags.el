@@ -213,11 +213,20 @@ to form the list."
 (defun filetags-completing-read-tag (collection selected-tags)
   "Completing read function for filetags with collection COLLECTION.
 SELECTED-TAGS is a list of already selected tags.
-If \"Perform Actions\" is chosen return nil otherwise return the chosen tag."
+If \"Commit\" is chosen return nil otherwise return the chosen tag."
 (let ((new-tag
-       (completing-read (format "Add(+)/Remove(-) Tags (%s): " (mapconcat #'identity selected-tags " "))
-                        (push "Perform Actions" collection) nil filetags-enforce-controlled-vocabulary nil nil "Perform Actions")))
-  (unless (string= new-tag "Perform Actions") new-tag)))
+       (completing-read
+        (concat "Add/remove tags with '+<tag>' or '-<tag>' "
+                (if selected-tags
+                    (format " (%s)" (mapconcat #'identity selected-tags " ")))
+                ":")
+        (push "Commit" collection)
+        nil
+        filetags-enforce-controlled-vocabulary
+        nil
+        nil
+        "Commit")))
+  (unless (string= new-tag "Commit") new-tag)))
 
 
 ;;;###autoload
