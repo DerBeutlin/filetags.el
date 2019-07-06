@@ -1,5 +1,5 @@
 [[https://travis-ci.org/DerBeutlin/filetags.el][file:https://travis-ci.org/DerBeutlin/filetags.el.svg?branch=master]]
-
+[[https://melpa.org/#/filetags][file:https://melpa.org/packages/filetags-badge.svg]]
 * Filetags
 Filetags is an Emacs package inspired by [[https://github.com/novoid/filetags][filetags]] which manages filetags directly in the filename. By default tags are space seperated words seperated from the rest of the filename by  =--=  e.g.
 : image -- holiday italy.png
@@ -9,8 +9,7 @@ This package provides a simple function to update these tags from the dired file
 This is up until now just a hobby project to teach me elisp. So I am grateful for every feedback.
 
 ** Installation
-Clone this Git-Repository and load filetags.el
-
+   Install *filetags* from melpa.
 ** Usage
 In dired call =filetags-dired-update-tags= to add or remove tags to multiple marked files or if no files are marked to the file on point.
 The User is then prompted for tags  and kann add tags by entering "+tag". If there are already tags present in one of the files the respective action to remove this tag "-tag" is proposed. The user can enter tag actions until he hits "Perform actions". Then the tags are applied. 
