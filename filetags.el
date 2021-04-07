@@ -35,8 +35,11 @@
 (defgroup filetags nil "A helper for managing filetags directly in the filename"
   :group 'applications)
 
-(defcustom filetags-delimiter-between-filename-and-tags " -- " "Delimiter between filename and tags."
-   :type 'string)
+(defcustom filetags-delimiter-between-filename-and-tags " -- "
+  "Delimiter between filename and tags.
+Could be a string (in left of the tags string) or a cons (both left and right).
+"
+  :type 'string)
 
 (defcustom filetags-delimiter-between-tags " " "Delimiter between individual tags."
   :type 'string)
@@ -63,14 +66,25 @@ if the variable `filetags-load-controlled-vocabulary-from-file' is t
 or is set in the variable `filetags-controlled-vocabulary'."
    :type 'bool)
 
+(defun filetags--generate-tags-regexp nil
+  (if (consp filetags-delimiter-between-filename-and-tags)
+      (format "%s\\(.*\\)%s$"
+              (regexp-quote (car filetags-delimiter-between-filename-and-tags))
+              (regexp-quote (cdr filetags-delimiter-between-filename-and-tags)))
+    (format "%s\\(.*\\)$" (regexp-quote filetags-delimiter-between-filename-and-tags)))
+  )
+
 (defun filetags-extract-filetags (filename)
-  "Extract the tags from FILENAME and return them as a sorted, unique list."
-  (if (string-match-p (regexp-quote filetags-delimiter-between-filename-and-tags)
-                      (file-name-sans-extension filename))
-      (filetags-sort-and-uniq-tags (split-string (car (last (split-string (file-name-sans-extension filename)
-                                                                          filetags-delimiter-between-filename-and-tags)))
-                                                 (regexp-quote filetags-delimiter-between-tags) t split-string-default-separators))
-    nil))
+  (let* ((regexp (filetags--generate-tags-regexp))
+         (filename-noext (file-name-sans-extension filename))
+         (tags-string (if (string-match regexp
+                                        filename-noext)
+                          (match-string 1 filename-noext) nil)))
+    (if tags-string
+        (filetags-sort-and-uniq-tags (split-string tags-string
+                                                   (regexp-quote filetags-delimiter-between-tags)))
+        ()))
+  )
 
 (defun filetags-sort-and-uniq-tags (tags)
   "Take a list of strings TAGS, remove duplicates and sort them."
@@ -81,8 +95,10 @@ or is set in the variable `filetags-controlled-vocabulary'."
   "Return the FILENAME but remove the tags.
 Tags are separated from the rest of the filename
 using the delimiter set in the variable `filetags-delimiter-between-filename-and-tags'."
-  (car (split-string (file-name-sans-extension filename)
-                     filetags-delimiter-between-filename-and-tags)))
+  (let ((filename-noext (file-name-sans-extension filename))
+        (regexp (filetags--generate-tags-regexp)))
+    (replace-regexp-in-string regexp "" filename-noext)
+    ))
 
 (defun filetags-generate-new-filename (filename tags)
   "Generate filename with list of strings TAGS from FILENAME.
@@ -92,8 +108,12 @@ using the delimiter set in the variable `filetags-delimiter-between-filename-and
         (extension (file-name-extension filename)))
     (concat new_filename
             (when tags
-              (concat filetags-delimiter-between-filename-and-tags
-                      (mapconcat #'identity (filetags-sort-and-uniq-tags tags) filetags-delimiter-between-tags)))
+              (let ((tags-string (mapconcat #'identity (filetags-sort-and-uniq-tags tags) filetags-delimiter-between-tags)))
+                (if (consp filetags-delimiter-between-filename-and-tags)
+                    (concat (car filetags-delimiter-between-filename-and-tags)
+                            tags-string
+                            (cdr filetags-delimiter-between-filename-and-tags))
+                  (concat filetags-delimiter-between-filename-and-tags tags-string))))
             (when extension ".") extension)))
 
 (defun filetags-add-tags-to-filename (fullname tags)
